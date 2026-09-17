@@ -162,9 +162,52 @@ có thì định danh được ai?" — xem thêm giới hạn quyền theo cộ
 
 **C4. Tên cột viết thường, tiền tố bảng `TT_`, liên kết mềm (không khoá ngoại).**
 
+**C5. 🔴 Một script KIỂM không chạy được TỆ HƠN không có script — nó cho cảm giác đã kiểm.**
+Cùng họ với B4 ("`npm start` không đáng tin để đếm cảnh báo") và bảng công cụ ở `AGENT.md` §5.
+**Chuyện thật (2026-09-17):** `99_KiemTra_P1.sql` KIỂM 7 có `p.perm  ission_name` (tên cột bị tách) — lỗi cú
+pháp, khối đó **chưa từng chạy**. Nhưng "KIỂM 3/6/7 ra 0 dòng" vẫn được dùng để kết luận P1 xong: output
+lỗi của một khối "PHẢI RA 0 DÒNG" nhìn lướt rất giống 0 dòng. Cùng lúc, `98_ThuNghiem` ("PASS 19/19") hoá ra
+**chưa từng chạy** trên DB đó (docs/03 N21).
+**Luật:**
+1. Một script kiểm chỉ được dùng làm bằng chứng khi **đã thấy nó chạy thật trên đúng DB** — mã thoát 0 VÀ đọc
+   output. "Có file kiểm" không phải bằng chứng.
+2. Mỗi lớp kiểm phải có **đối chứng âm**: cài một lỗi cố ý, thấy nó bị bắt. Không bắt được lỗi cài sẵn ⇒ lớp
+   đó đang pass suông.
+3. Kiểm kiểu "PHẢI RA 0 DÒNG" phải chứng minh **tiền đề không rỗng** (KIỂM 3 dò `sql_expression_dependencies` —
+   SP không ghi phụ thuộc thì luôn 0 dòng). Tốt hơn: script **tự THROW** khi sai (như `96_`–`99_`), đừng bắt
+   người đọc output. Mỗi mục kiểm một **mã lỗi riêng** — đọc mã là biết mục nào hỏng (`99_`: 5010n = KIỂM n).
+4. **"Có file" ≠ "DB giống file".** File DDL bọc `IF NOT EXISTS` bỏ qua lặng lẽ khi bảng đã có; view/SP có thể bị
+   sửa file sau khi triển khai. So bằng thứ đang chạy: view/SP so `sys.sql_modules`, bảng so `INFORMATION_SCHEMA.COLUMNS`
+   với bảng dựng từ chính file trong `tempdb` (`96_SoDDL_Bang`) — không phân tích chữ `CREATE TABLE`.
+5. Viết chú thích khối trong SQL: đừng để cặp gạch-chéo-sao xuất hiện bên trong (vd. đường dẫn thư mục + dấu sao) —
+   nó mở chú thích **lồng**, cả batch lỗi Msg 113.
+6. Công cụ SQL, cái nào bắt gì:
+
+| Cách | Bắt được | KHÔNG bắt được |
+|---|---|---|
+| `SET PARSEONLY ON` | lỗi cú pháp | tên cột/bảng sai (`permision_name` qua được!) · SQL động |
+| `SET NOEXEC ON` | + tên cột/bảng sai (biên dịch, không chạy) | lỗi lúc chạy · SQL động · logic |
+| Chạy trong `BEGIN TRAN … ROLLBACK` | + SQL động, quyền, logic | thứ không rollback được (IDENTITY vẫn tăng) |
+| `dotnet build` | lỗi C# | mọi thứ trong SQL (`AGENT.md` §5) |
+
+**C6. 🔴 Script kiểm phải CHỨNG MINH NÓ ĐÃ CHẠY trước khi báo kết quả.** Anh em của C5: C5 là "script có chạy
+được không", C6 là "script có chạy trên ĐÚNG thứ nó định kiểm không".
+**Chuyện thật (2026-09-17), BA lần thất bại từ BA hướng khác nhau:**
+1. `99_` KIỂM 7 có lỗi cú pháp ⇒ khối đó không chạy, output lỗi bị đọc thành "0 dòng" (C5).
+2. `97_` chạy trong SSMS thường ⇒ dòng `:r` là lỗi cú pháp, SSMS **bỏ qua rồi chạy tiếp** ⇒ kiểm trên quyền CŨ ⇒ PASS.
+3. `97_` chạy bằng sqlcmd sai thư mục, thiếu `-b` ⇒ `:r` không thấy file, **in lỗi rồi chạy tiếp** ⇒ PASS.
+Ba nguyên nhân (cú pháp · công cụ · thư mục) — cùng một hậu quả: **PASS trên trạng thái không phải thứ cần kiểm.**
+**Luật:**
+- Phần được kiểm phải **để lại DẤU** mà script kiểm **xoá trước, kiểm sau**. Không thấy dấu ⇒ THROW, không in PASS.
+  Dấu tốt nhất là chính kết quả không thể có sẵn (`96_`: bảng trong tempdb đã kiểm rỗng trước). Khi thứ được kiểm
+  có thể ĐÃ đúng sẵn trên DB (quyền — `97_`), phải có dấu riêng: `SESSION_CONTEXT` (sống theo phiên, ROLLBACK không xoá).
+- Dòng PASS phải kiểm lại dấu **ngay trước khi in** — SSMS không dừng sau lỗi, batch sau vẫn chạy.
+- File dùng lệnh sqlcmd (`:r`) mở đầu bằng `:on error exit`: dừng ở lỗi đầu tiên kể cả khi quên `-b`.
+- Thử **từng cách chạy sai** cụ thể, không chỉ cách đúng — bảng ma trận ở docs/03 N21 mục 6.
+
 ## D. Cạm bẫy đã verify trong chính mã nguồn này
 
-Hai cái dưới đây **đã chép sang repo này** và vẫn còn nguyên:
+Các mục dưới đây **đã chép sang repo này**; 1–4 vẫn còn nguyên, 5 đã sửa:
 
 1. **`Extentions.RemoveSpace()` treo vô hạn** — `input.Replace(" ", "")` bị vứt kết quả, vòng
    `do…while (input.IndexOf(" ") >= 0)` không bao giờ thoát. `ToInt32()` và `ToDecimal()` đều gọi nó
@@ -175,3 +218,34 @@ Hai cái dưới đây **đã chép sang repo này** và vẫn còn nguyên:
 3. **`ToInt` trả -1 còn `MapInt` trả 0** khi null. Dễ nhầm.
 4. **`ConvertToDataTable<T>` sắp cột theo alphabet** khi không chỉ định `columnNames` — SQL TVP type
    phải khai báo cột **đúng thứ tự alphabet**, nếu không dữ liệu lệch cột âm thầm.
+5. **Chữ của một Exception KHÔNG BAO GIỜ rời máy chủ.** 🔄 Repo cũ ghép `ex.Message` vào response ở ba chỗ
+   (`ErrorSysResponse`, middleware, `CheckInsert/Update/Delete`) — nằm sau `[Authorize]` nên ít nguy; ở cổng
+   công khai này nó trả tên tài khoản SQL cho người lạ (đo thật P2a). Đã sửa cả ba (`docs/03` N19.5).
+   **Phân biệt lỗi hệ thống / nghiệp vụ theo ĐƯỜNG ĐI, không theo nội dung:** lỗi nghiệp vụ = service tự dựng
+   response với mã cụ thể + câu viết sẵn; mọi thứ tới `catch` = lỗi hệ thống = câu chung.
+   ⚠️ Vì vậy **đừng `throw` để báo lỗi cho người dùng** — câu đó sẽ bị che. Che nhầm là hỏng về phía an toàn.
+
+## E. File người dùng tải lên
+
+**E1. 🔴 TRƯỚC KHI CHỌN CHỖ LƯU BẤT KỲ FILE NÀO: kiểm thư mục đó CÓ ĐƯỢC PHỤC VỤ CÔNG KHAI không.**
+Mọi `app.UseStaticFiles(...)` trong `Program.cs` biến MỘT thư mục (và mọi thư mục con) thành URL ai cũng tải được, không
+cần đăng nhập. Tên file GUID khó đoán nhưng KHÔNG phải rào chắn: URL rò qua log, lịch sử trình duyệt, ảnh chụp màn hình,
+header Referer.
+
+Hiện trạng (đọc `Program.cs`, 2026-09-17 — **đọc lại mỗi lần**, danh sách này không tự cập nhật):
+
+| Thư mục trên đĩa | Phục vụ công khai? | Dùng cho |
+|---|---|---|
+| `Assets/Template` | ✅ CÓ — `/Assets/Template` | mẫu Word/Excel tải về |
+| `Assets/Upload` | ✅ CÓ — `/Assets/Upload` | CHỈ file vốn công khai (sẽ là ảnh bìa, minh chứng chi) |
+| `Assets/RiengTu/*` | ❌ KHÔNG | file riêng tư — ảnh chuyển khoản (`Assets/RiengTu/AnhChuyenKhoan`) |
+
+**Cách kiểm trước khi chọn chỗ lưu:** `grep -n "UseStaticFiles" -A 6 ApiQuanLyTaiTro/Program.cs` — so đường dẫn định lưu với
+mọi `PhysicalFileProvider`. Sau khi lưu thử một file: `GET` đúng đường đó phải ra **404**.
+**File riêng tư chỉ ra ngoài qua endpoint `[Authorize]`**, tra tên file từ DB theo id — không ghép tên từ request vào đường dẫn.
+⚠️ **Đừng thêm `UseStaticFiles` trỏ vào `Assets` hay `Assets/RiengTu`** "cho tiện xem ảnh" — là mở cả ảnh ngân hàng ra ngoài.
+
+**Chuyện thật (P3a, 2026-09-17):** lệnh lô chốt lưu ảnh chuyển khoản ở `Assets/Upload`. Thư mục đó phục vụ công khai; ảnh CK
+chứa tên chủ tài khoản, số tài khoản, số dư — **kể cả của người chọn ẩn danh**. Làm theo lệnh là phá chính tính năng ẩn
+danh vừa dựng. Agent đọc `Program.cs`, đối chiếu với chú thích DDL `TT_AnhChuyenKhoan`, lưu vào `Assets/RiengTu`; lead
+duyệt. Bài học: vị trí lưu file là quyết định BẢO MẬT, không phải quyết định sắp xếp thư mục.

@@ -7,7 +7,15 @@ import {
 } from "../../model/ITaiTro";
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-// DỮ LIỆU CỨNG TẠM THỜI — MỘT FILE DUY NHẤT, VÀ ĐÂY LÀ ĐIỂM THAY THẾ
+// 🔴 P2b (2026-09-17): FILE NÀY KHÔNG CÒN ĐƯỢC IMPORT. Hai trang tài trợ gọi API thật qua services/taiTroApi.ts.
+//    GIỮ LẠI (lead chốt) làm BỘ 7 CA XẤU để đối chiếu — cùng bộ ca đó đã được nạp vào DB bằng
+//    DB_Setup/91_DuLieuMau_Nhap.sql (id DB khác id ở đây: IDENTITY không bắt đầu từ 1).
+//    ⚠️ Đừng import lại "cho nhanh" khi API hỏng — sửa API. Hai hàm cuối file giữ nguyên chỉ để file tự đứng được.
+//    ⚠️ Kiểu vẫn phải khớp ITaiTro.ts (tsc kiểm) — P2b đã đưa về hợp đồng mới: phu_de, loi_keu_goi,
+//       ten_chu_tai_khoan, an_dinh_danh; bỏ ten_chuyen_nganh. Nội dung chữ cũ KHÔNG đổi.
+//
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// DỮ LIỆU CỨNG TẠM THỜI — MỘT FILE DUY NHẤT, VÀ ĐÂY TỪNG LÀ ĐIỂM THAY THẾ (tới P2b)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // Lead chốt làm GIAO DIỆN TRƯỚC, quản trị làm sau. Chọn dữ liệu cứng thay vì tạo bảng ngay vì
 // yếu tố quyết định là: CHƯA CÓ MÀN QUẢN TRỊ. Tạo bảng xong thì mỗi lần muốn đổi một con số để
@@ -88,7 +96,8 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
     {
         id: 1,
         ten: "Tiếp bước đến trường 2025",
-        mo_ta_ngan: "Hỗ trợ sinh viên có hoàn cảnh khó khăn vươn lên trong học tập",
+        loi_keu_goi: "Mỗi đóng góp, dù nhỏ, đều giúp một sinh viên tiếp tục đến trường.",
+        phu_de: "Hỗ trợ sinh viên có hoàn cảnh khó khăn vươn lên trong học tập",
         mo_ta_day:
             "Chương trình kêu gọi sự chung tay của các thế hệ cựu sinh viên, phụ huynh và các nhà "
             + "hảo tâm để trao học bổng cho sinh viên có hoàn cảnh khó khăn của Khoa Toán - Cơ - Tin "
@@ -100,6 +109,7 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         don_vi_to_chuc: "Khoa Toán - Cơ - Tin học",
         stk: "1234 5678 9999",
         ngan_hang: "Vietcombank",
+        ten_chu_tai_khoan: "KHOA TOAN - CO - TIN HOC",
         noi_dung_ck: "Tai tro Tiep buoc den truong",
         anh_qr: "tai-tro-qr-1.png",
         du_kien_chi: [
@@ -110,45 +120,45 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         // Tổng = 182.750.000 trên mục tiêu 300.000.000 => 61%, khớp ảnh mẫu.
         nha_tai_tro: [
             {
-                id: 1, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Nguyễn Khánh Tùng", an_danh: false, ngay_sinh: "1976-03-15",
+                id: 1, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Nguyễn Khánh Tùng", an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: "1976-03-15",
                 ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học", nien_khoa: "1994-1998",
-                ten_chuyen_nganh: "Toán học", ten_lop: "K39A", so_tien: 5_000_000, ngay_tai_tro: "2025-09-02",
+                ten_lop: "K39A", so_tien: 5_000_000, ngay_tai_tro: "2025-09-02",
             },
             {
-                id: 2, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Trần Văn Nam", an_danh: false, ngay_sinh: "1977-10-05",
+                id: 2, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Trần Văn Nam", an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: "1977-10-05",
                 ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học", nien_khoa: "1995-1999",
-                ten_chuyen_nganh: "Cơ học", ten_lop: "K40B", so_tien: 3_000_000, ngay_tai_tro: "2025-09-05",
+                ten_lop: "K40B", so_tien: 3_000_000, ngay_tai_tro: "2025-09-05",
             },
             {
-                id: 3, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Lê Thị Hoa", an_danh: false, ngay_sinh: "1976-11-22",
+                id: 3, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Lê Thị Hoa", an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: "1976-11-22",
                 ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học", nien_khoa: "1994-1998",
-                ten_chuyen_nganh: "Toán - Tin ứng dụng", ten_lop: "K39A", so_tien: 2_000_000,
+                ten_lop: "K39A", so_tien: 2_000_000,
                 ngay_tai_tro: "2025-09-07",
             },
             // 🔴 CA XẤU 2 — doanh nghiệp: KHÔNG có hệ/khoa/khoá/chuyên ngành/lớp.
             {
-                id: 4, loai: eLoaiNhaTaiTro.DoanhNghiep, ho_ten_don_vi: "Công ty TNHH ABC", an_danh: false, ngay_sinh: null /* doanh nghiệp: KHÔNG CÓ ngày sinh (ca xấu 2) */,
-                ten_he: null, ten_khoa: null, nien_khoa: null, ten_chuyen_nganh: null, ten_lop: null,
+                id: 4, loai: eLoaiNhaTaiTro.DoanhNghiep, ho_ten_don_vi: "Công ty TNHH ABC", an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: null /* doanh nghiệp: KHÔNG CÓ ngày sinh (ca xấu 2) */,
+                ten_he: null, ten_khoa: null, nien_khoa: null, ten_lop: null,
                 so_tien: 120_000_000, ngay_tai_tro: "2025-09-10",
             },
             // 🔴 CA XẤU 7 — ẩn danh. `ho_ten_don_vi = null` VÀ `an_danh = true` đi cùng nhau.
             //    Vẫn giữ khoá/lớp: người này muốn giấu TÊN, không giấu việc mình là cựu SV khoá đó.
             {
-                id: 5, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: null, an_danh: true, ngay_sinh: null /* ẩn danh mức 1: server CHE ngày sinh dù giữ lớp — lớp + ngày sinh = một người */,
+                id: 5, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: null, an_danh: true, an_dinh_danh: false /* mức 1: giấu tên, giữ lớp */, ngay_sinh: null /* ẩn danh mức 1: server CHE ngày sinh dù giữ lớp — lớp + ngày sinh = một người */,
                 ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học", nien_khoa: "1994-1998",
-                ten_chuyen_nganh: "Toán học", ten_lop: "K39A", so_tien: 40_000_000, ngay_tai_tro: "2025-09-12",
+                ten_lop: "K39A", so_tien: 40_000_000, ngay_tai_tro: "2025-09-12",
             },
             {
-                id: 6, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Phạm Thị Lan", an_danh: false, ngay_sinh: "1978-02-03",
+                id: 6, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Phạm Thị Lan", an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: "1978-02-03",
                 ten_he: "Vừa làm vừa học", ten_khoa: "Toán - Cơ - Tin học", nien_khoa: "1996-2000",
-                ten_chuyen_nganh: "Toán - Tin ứng dụng", ten_lop: "K41C", so_tien: 750_000,
+                ten_lop: "K41C", so_tien: 750_000,
                 ngay_tai_tro: "2025-09-15",
             },
             // 🔴 CA XẤU 2 (bản thứ hai) — tập thể lớp: CÓ lớp/khoá nhưng KHÔNG có chuyên ngành.
             {
                 id: 7, loai: eLoaiNhaTaiTro.TapThe, ho_ten_don_vi: "Tập thể lớp K39A - Khoá 1994-1998",
-                an_danh: false, ngay_sinh: null /* tập thể lớp: KHÔNG CÓ ngày sinh (ca xấu 2) */, ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học",
-                nien_khoa: "1994-1998", ten_chuyen_nganh: null, ten_lop: "K39A",
+                an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: null /* tập thể lớp: KHÔNG CÓ ngày sinh (ca xấu 2) */, ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học",
+                nien_khoa: "1994-1998", ten_lop: "K39A",
                 so_tien: 12_000_000, ngay_tai_tro: "2025-09-18",
             },
         ],
@@ -176,7 +186,8 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
     {
         id: 2,
         ten: "Học bổng khuyến khích tài năng Toán học dành cho sinh viên năm nhất",
-        mo_ta_ngan:
+        loi_keu_goi: "Cùng Khoa chắp cánh cho những tài năng Toán học trẻ.",
+        phu_de:
             "Tìm kiếm và đồng hành cùng sinh viên năm nhất có năng khiếu đặc biệt về Toán học",
         mo_ta_day:
             "Chương trình dành cho sinh viên năm nhất có thành tích nổi bật trong các kỳ thi học "
@@ -189,6 +200,7 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         don_vi_to_chuc: "Khoa Toán - Cơ - Tin học",
         stk: "1234 5678 0001",
         ngan_hang: "Vietcombank",
+        ten_chu_tai_khoan: "KHOA TOAN - CO - TIN HOC",
         noi_dung_ck: "Tai tro Hoc bong tai nang Toan hoc",
         anh_qr: null,
         du_kien_chi: [
@@ -203,7 +215,8 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
     {
         id: 3,
         ten: "Quỹ hỗ trợ thực tập sinh viên 2024",
-        mo_ta_ngan: "Hỗ trợ chi phí đi lại và sinh hoạt cho sinh viên thực tập xa",
+        loi_keu_goi: "Cảm ơn mọi đóng góp đã giúp chương trình vượt mục tiêu.",
+        phu_de: "Hỗ trợ chi phí đi lại và sinh hoạt cho sinh viên thực tập xa",
         mo_ta_day:
             "Quỹ hỗ trợ sinh viên năm cuối trong kỳ thực tập tại doanh nghiệp, đặc biệt là các em "
             + "phải di chuyển xa nơi ở. Chương trình đã kết thúc và vượt mục tiêu đề ra.",
@@ -214,6 +227,7 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         don_vi_to_chuc: "Khoa Toán - Cơ - Tin học",
         stk: "1234 5678 0002",
         ngan_hang: "Vietcombank",
+        ten_chu_tai_khoan: "KHOA TOAN - CO - TIN HOC",
         noi_dung_ck: "Tai tro Quy thuc tap 2024",
         anh_qr: "tai-tro-qr-3.png",
         du_kien_chi: [
@@ -223,13 +237,13 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         nha_tai_tro: [
             {
                 id: 8, loai: eLoaiNhaTaiTro.DoanhNghiep, ho_ten_don_vi: "Tập đoàn Công nghệ XYZ",
-                an_danh: false, ngay_sinh: null /* doanh nghiệp */, ten_he: null, ten_khoa: null, nien_khoa: null,
-                ten_chuyen_nganh: null, ten_lop: null, so_tien: 250_000_000, ngay_tai_tro: "2024-03-15",
+                an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: null /* doanh nghiệp */, ten_he: null, ten_khoa: null, nien_khoa: null,
+                ten_lop: null, so_tien: 250_000_000, ngay_tai_tro: "2024-03-15",
             },
             {
                 id: 9, loai: eLoaiNhaTaiTro.TapThe, ho_ten_don_vi: "Ban liên lạc cựu sinh viên Khoa",
-                an_danh: false, ngay_sinh: null /* tập thể */, ten_he: null, ten_khoa: "Toán - Cơ - Tin học", nien_khoa: null,
-                ten_chuyen_nganh: null, ten_lop: null, so_tien: 100_000_000, ngay_tai_tro: "2024-05-20",
+                an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: null /* tập thể */, ten_he: null, ten_khoa: "Toán - Cơ - Tin học", nien_khoa: null,
+                ten_lop: null, so_tien: 100_000_000, ngay_tai_tro: "2024-05-20",
             },
         ],
         khoan_chi: [
@@ -250,7 +264,8 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
     {
         id: 4,
         ten: "Trang bị phòng máy tính thực hành",
-        mo_ta_ngan: "Nâng cấp phòng máy phục vụ học phần lập trình và mô phỏng số",
+        loi_keu_goi: "Số kinh phí vận động được đã thay mới 13 máy cho sinh viên.",
+        phu_de: "Nâng cấp phòng máy phục vụ học phần lập trình và mô phỏng số",
         mo_ta_day:
             "Chương trình vận động kinh phí thay mới 30 máy tính cho phòng thực hành của Khoa. "
             + "Chương trình đã kết thúc; số kinh phí vận động được đã dùng để thay mới 13 máy.",
@@ -261,6 +276,7 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         don_vi_to_chuc: "Khoa Toán - Cơ - Tin học",
         stk: "1234 5678 0003",
         ngan_hang: "Vietcombank",
+        ten_chu_tai_khoan: "KHOA TOAN - CO - TIN HOC",
         noi_dung_ck: "Tai tro Phong may thuc hanh",
         anh_qr: null,
         du_kien_chi: [
@@ -269,14 +285,14 @@ const CHUONG_TRINH: IChuongTrinhTaiTro[] = [
         ],
         nha_tai_tro: [
             {
-                id: 10, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Đỗ Minh Quân", an_danh: false, ngay_sinh: "1978-07-17",
+                id: 10, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: "Đỗ Minh Quân", an_danh: false, an_dinh_danh: false /* công khai */, ngay_sinh: "1978-07-17",
                 ten_he: "Chính quy", ten_khoa: "Toán - Cơ - Tin học", nien_khoa: "1996-2000",
-                ten_chuyen_nganh: "Tin học", ten_lop: "K41A", so_tien: 50_000_000,
+                ten_lop: "K41A", so_tien: 50_000_000,
                 ngay_tai_tro: "2023-09-20",
             },
             {
-                id: 11, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: null, an_danh: true, ngay_sinh: null /* ẩn danh: server che */,
-                ten_he: null, ten_khoa: null, nien_khoa: null, ten_chuyen_nganh: null, ten_lop: null,
+                id: 11, loai: eLoaiNhaTaiTro.CaNhan, ho_ten_don_vi: null, an_danh: true, an_dinh_danh: true /* mức 2: giấu tất cả */, ngay_sinh: null /* ẩn danh: server che */,
+                ten_he: null, ten_khoa: null, nien_khoa: null, ten_lop: null,
                 so_tien: 15_000_000, ngay_tai_tro: "2023-11-02",
             },
         ],

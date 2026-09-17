@@ -1,4 +1,6 @@
 using ApiQuanLyTaiTro.Services.Email;
+using ApiQuanLyTaiTro.Services.KhaiTaiTro;
+using ApiQuanLyTaiTro.Services.TaiTro;
 
 namespace ApiQuanLyTaiTro.Services
 {
@@ -6,7 +8,7 @@ namespace ApiQuanLyTaiTro.Services
     /// Concrete implementation của <see cref="IServiceWrapper"/> — Hybrid DI + Lazy Loading.
     /// </summary>
     /// <remarks>
-    /// KHUÔN CHO SERVICE ĐẦU TIÊN (chép nguyên, đổi tên):
+    /// KHUÔN CHO SERVICE MỚI (chép nguyên, đổi tên — TaiTro bên dưới làm đúng khuôn này):
     ///     private IChuongTrinhService? _chuongTrinhService;
     ///     public  IChuongTrinhService  ChuongTrinh =>
     ///         _chuongTrinhService ??= new ChuongTrinhService(_serviceProvider);
@@ -21,6 +23,8 @@ namespace ApiQuanLyTaiTro.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         private IEmailService? _emailService;
+        private ITaiTroService? _taiTroService;
+        private IKhaiTaiTroService? _khaiTaiTroService;
 
         public ServiceWrapper(
             IServiceProvider serviceProvider,
@@ -34,5 +38,11 @@ namespace ApiQuanLyTaiTro.Services
 
         public IEmailService Email =>
             _emailService ??= new EmailService(_serviceProvider.GetRequiredService<IConfiguration>());
+
+        public ITaiTroService TaiTro =>
+            _taiTroService ??= new TaiTroService(_serviceProvider);
+
+        public IKhaiTaiTroService KhaiTaiTro =>
+            _khaiTaiTroService ??= new KhaiTaiTroService(_serviceProvider);
     }
 }

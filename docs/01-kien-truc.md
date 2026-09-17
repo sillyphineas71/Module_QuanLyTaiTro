@@ -116,7 +116,8 @@ Controller không chứa logic · Service không chứa SQL · Repository không
 
 Ba pattern **không được thay thế** (đã chép sang nguyên vẹn):
 1. **Wrapper + Service Locator** — `IServiceWrapper` / `IRepositoryWrapper`, không inject từng
-   service lẻ. Cả hai hiện **rỗng có chủ đích**, khuôn thêm mục mới ghi ngay trong file.
+   service lẻ. Khuôn thêm mục mới ghi ngay trong file. 🔄 Tới P1 cả hai **rỗng có chủ đích**; từ P2a
+   mỗi wrapper có mục đầu tiên `TaiTro` (đọc công khai).
 2. **Lazy loading `??=`** trong wrapper.
 3. **Truyền `IServiceProvider`** xuống service (`BaseService`).
 
@@ -133,15 +134,21 @@ cũng mở được trang chương trình tài trợ), mà cùng DB đó chứa 
 ngân hàng của cựu sinh viên. Một lỗi SQL injection hay một SP viết ẩu ở cổng công khai mà chạy
 bằng tài khoản toàn quyền là rò toàn bộ dữ liệu đó.
 
-Script đầy đủ: [`DB_Setup/01_CreateLogin_TaiTro.sql`](../DB_Setup/01_CreateLogin_TaiTro.sql).
+Script: [`DB_Setup/00_TaoLogin_TaiTro.sql`](../DB_Setup/00_TaoLogin_TaiTro.sql) (login + user, chạy đầu) ·
+[`DB_Setup/90_CapQuyen_TaiTro.sql`](../DB_Setup/90_CapQuyen_TaiTro.sql) (quyền, chạy SAU bảng/view/SP).
+🔄 Tới 2026-09-17 là một file `01_CreateLogin_TaiTro.sql` — tách vì tên `01_` khiến phần quyền bị chạy trước khi có SP (docs/03 N20).
 Tóm tắt quyền:
 
 | Đối tượng | Quyền |
 |---|---|
 | `TT_*` (bảng + SP) | toàn quyền — **trừ** `TT_MaDoiPhien` |
+| `TT_v_*` (view công khai) | **KHÔNG quyền nào** — SP đọc view qua ownership chaining (mọi đối tượng chủ `dbo`), `EXECUTE` là đủ. Chỉ cấp `SELECT` khi view do chủ KHÁC `dbo` (chuỗi đứt). **Không bao giờ** quyền ghi trên view |
 | `TT_MaDoiPhien` | `SELECT` + `DELETE` (đổi mã). **DENY `INSERT`, `UPDATE`**; DENY `EXECUTE` trên SP tạo mã |
-| `CSV_TaiKhoan`, `CSV_ThongTin`, `STU_Lop`, `dmHe`, `dmKhoa`, `dmChuyenNganh` | `SELECT` |
+| `CSV_TaiKhoan` | `SELECT` **theo cột**: `id`, `email_dang_nhap`, `id_sv`, `vai_tro`, `id_lop`, `trang_thai`, `is_deleted`. **Không** `mat_khau`, `provider_key`, `ly_do_tu_choi` (🔄 tới 2026-09-17 cấp cả bảng) |
+| `CSV_ThongTin` | `SELECT` **theo cột**: `id_tai_khoan`, `sdt_hien_tai`, `email_hien_tai`, `is_deleted`. **Không** `dia_chi_hien_tai`, `ghi_chu`, `id_tinh_thanh`, `id_xa_phuong` — `TT_NhaTaiTro` không có cột địa chỉ để điền (🔄 tới 2026-09-17 cấp cả bảng) |
+| `STU_Lop`, `dmHe`, `dmKhoa`, `dmChuyenNganh` | `SELECT` (không cần cho SP tĩnh — giữ làm lưới an toàn cho SQL động, lead chốt 2026-09-17; đã rà tên cột, không có cột nhạy cảm) |
 | `STU_HoSoSinhVien` | `SELECT` **chỉ hai cột** `Ho_ten`, `Ngay_sinh` |
+| `STU_DanhSach` (nối SV ↔ lớp) | **KHÔNG quyền nào** — SP `TT_*` đọc qua ownership chaining (đã thử 2026-09-17). Bảng có `Mat_khau`, `No_hoc_phi`: cấp cả bảng là lộ mật khẩu SV. Chỉ cấp **theo cột** nếu SP dùng SQL động |
 | mọi thứ khác | không có gì |
 
 > ⚠️ **GIỚI HẠN THẬT CỦA QUYỀN THEO CỘT — đọc trước khi tin là đã an toàn.**

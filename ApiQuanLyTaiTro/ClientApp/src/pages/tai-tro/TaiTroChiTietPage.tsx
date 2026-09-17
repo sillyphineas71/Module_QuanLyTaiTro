@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { CalendarIcon, FileIcon, LocationIcon } from "@primer/octicons-react";
 import TrangCongKhai from "../../layout/TrangCongKhai";
 import AppResultState from "../../layout/AppResultState";
+import MyButton from "../../components-ui/button";
 import { TabsWithItems } from "../../components-ui/tab/Tabs";
 import DataTable, { eSortMode, IColumn } from "../../components-ui/data-table/DataTable";
 import { renderOVanBan } from "../../components-ui/data-table/renderOVanBan";
@@ -22,7 +23,8 @@ import {
     tongDaQuyen,
     tongDuKienChi,
 } from "../../model/ITaiTro";
-import { layChiTiet } from "./taiTroMock";
+// 🔄 P2b: nguồn là API thật. `./taiTroMock` KHÔNG còn được import — giữ file làm bộ 7 ca xấu để đối chiếu.
+import { layChiTietChuongTrinh } from "../../services/taiTroApi";
 import { dinhDangNgay } from "../../utils/dinhDangNgay";
 import styles from "./TaiTroChiTietPage.module.css";
 
@@ -100,6 +102,9 @@ const TheThamGia: React.FC<{ ct: IChuongTrinhTaiTro }> = ({ ct }) => {
             <dl className={styles.chuyenKhoan}>
                 <dt>Số tài khoản</dt><dd>{ct.stk}</dd>
                 <dt>Ngân hàng</dt><dd>{ct.ngan_hang}</dd>
+                {/* P2b: API có `ten_chu_tai_khoan` (thêm ở lô đối chiếu ảnh mẫu) — ứng dụng ngân hàng hiện tên chủ
+                    tài khoản sau khi nhập số; người chuyển đối chiếu với dòng này trước khi bấm chuyển. */}
+                <dt>Chủ tài khoản</dt><dd>{ct.ten_chu_tai_khoan}</dd>
                 <dt>Nội dung</dt><dd>{ct.noi_dung_ck}</dd>
             </dl>
         </aside>
@@ -191,6 +196,7 @@ const VongTienDo: React.FC<{ phanTram: number; dangDienRa: boolean }> = ({ phanT
 // 🔴 HAI GLYPH KHÁC NHAU CHO HAI Ý NGHĨA KHÁC NHAU — chỗ dễ làm sai nhất của bảng này:
 //      "—"                  = hệ thống KHÔNG CÓ dữ liệu này (doanh nghiệp không có khoá/lớp)
 //      "Nhà tài trợ ẩn danh"= người tài trợ CHỦ ĐỘNG giấu tên
+//      "Ẩn"                 = ô định danh bị server CHE (Ngày sinh: mọi mức ẩn danh · Lớp: chỉ mức 2)
 //    Dùng "—" cho cả hai thì người đọc không phân biệt được "không có" với "cố tình giấu", mà
 //    đó là hai câu trả lời rất khác nhau trên một bảng công khai.
 // Khối "Chi phí đã chi" khi thu gọn — đúng số mẫu sếp vẽ: bảng 3 dòng, dải 3 ảnh ("Xem tất cả minh
@@ -237,7 +243,17 @@ const cotNhaTaiTro = (): IColumn[] => [
     //  có thật — nên width phải đủ cho "4444-4444" (đo 103px), đừng để cắt cụt.)
     // Lớp: NỬA ĐÓNG. 🔄 Từng là 70px "đã dư cho K39A" — nhưng "K39A" là dạng của MOCK. Lớp THẬT trong
     // STU_Lop có dạng "CQ56/11.01" (đo 93px) — 70px sẽ cắt mọi lớp thật. 96px; mã dài hơn thì cắt + tooltip.
-    { dataField: "ten_lop", caption: "Lớp", width: 96, cellRender: (n: INhaTaiTro) => oHoacGach(n.ten_lop) },
+    // 🔴 `null` CÓ HAI NGHĨA, như Ngày sinh — nhưng điều kiện KHÁC: xét `an_dinh_danh`, KHÔNG xét `an_danh`.
+    //      an_dinh_danh (ẩn danh MỨC 2, giấu tất cả) ⇒ "Ẩn": server ĐÃ CHE lớp
+    //      còn lại                                   ⇒ lớp thật, hoặc "—" nếu KHÔNG CÓ (doanh nghiệp)
+    //    Mức 1 (`an_danh && !an_dinh_danh`) giấu tên nhưng GIỮ lớp ⇒ phải hiện lớp thật. Xét `an_danh` ở đây
+    //    là vẽ "Ẩn" đè lên một lớp server đã cho hiện. 🔄 Tới N23 (2026-09-17) cột này vẽ "—" cho mức 2.
+    {
+        dataField: "ten_lop", caption: "Lớp", width: 96,
+        cellRender: (n: INhaTaiTro) => (n.an_dinh_danh
+            ? <span className={styles.anDanh}>Ẩn</span>
+            : oHoacGach(n.ten_lop)),
+    },
     // ═══════════════════════════════════════════════════════════════════════════════════════
     // 🔴 CỘT TIỀN: `align: "left"` — CANH THEO CHỮ SỐ ĐẦU, lead chốt. ĐỪNG "sửa lại cho đúng
     //    quy ước" nếu không hỏi lại.
@@ -288,24 +304,25 @@ const TaiTroChiTietPage: React.FC = () => {
     // Khối chi phí: bảng mở hết hay thu gọn về SO_DONG_CHI_THU_GON dòng; dải ảnh mở hết hay SO_ANH_THU_GON ảnh.
     const [moRongChi, setMoRongChi] = useState(false);
     const [moRongAnh, setMoRongAnh] = useState(false);
+    // Tăng lên = tải lại (nút "Thử lại" khi lỗi mạng).
+    const [lanTai, setLanTai] = useState(0);
 
     useAppDocumentTitle(ct ? ct.ten : "Chương trình tài trợ");
 
     useEffect(() => {
         let con = true;
+        setTrangThai("dang-tai");
         void (async () => {
+            // id không phải số nguyên dương ⇒ KHÔNG gọi API (router nhận cả "/tai-tro/abc"): trả thẳng
+            // "không tìm thấy", CÙNG câu với 404 của BE — hai đường một câu trả lời.
             const so = Number(id);
-            if (!Number.isFinite(so) || so <= 0) { setTrangThai("khong-thay"); return; }
-            try {
-                const kq = await layChiTiet(so);
-                if (!con) return;
-                if (kq) { setCt(kq); setTrangThai("xong"); } else { setTrangThai("khong-thay"); }
-            } catch {
-                if (con) setTrangThai("loi");
-            }
+            if (!Number.isInteger(so) || so <= 0) { setTrangThai("khong-thay"); return; }
+            const kq = await layChiTietChuongTrinh(so);
+            if (!con) return;
+            if (kq.loai === "xong") { setCt(kq.data); setTrangThai("xong"); } else { setTrangThai(kq.loai); }
         })();
         return () => { con = false; };
-    }, [id]);
+    }, [id, lanTai]);
 
     const soLieu = useMemo(() => {
         if (!ct) return null;
@@ -315,13 +332,16 @@ const TaiTroChiTietPage: React.FC = () => {
     }, [ct]);
 
     if (trangThai === "dang-tai") {
-        return <TrangCongKhai><div className={styles.trang}>
-            <p className={styles.dangTai}>Đang tải chương trình…</p>
+        // Chữ, KHÔNG khung xương (lead chốt P2b).
+        return <TrangCongKhai><div className={styles.trang} aria-busy="true">
+            <p className={styles.dangTai} role="status">Đang tải chương trình…</p>
         </div></TrangCongKhai>;
     }
 
     // 🔴 404 — trang CÔNG KHAI nên người ta gõ tay URL được, và một id sai phải nói rõ là id sai
     // chứ không để trang trắng. Kèm đường quay lại: ngõ cụt không lối ra là lỗi trợ năng.
+    // ⚠️ "Không tìm thấy" KHÔNG có nút Thử lại: thử lại không đổi được kết quả (id sai / đã gỡ / còn nháp —
+    //    BE cố ý không phân biệt). CHỈ lỗi mạng mới có — đó là thứ thử lại có thể sửa được.
     if (trangThai === "khong-thay" || trangThai === "loi" || !ct || !soLieu) {
         const loi = trangThai === "loi";
         return <TrangCongKhai><div className={styles.trang}>
@@ -329,8 +349,11 @@ const TaiTroChiTietPage: React.FC = () => {
                 variant="error"
                 title={loi ? "Không tải được chương trình" : "Không tìm thấy chương trình này"}
                 description={loi
-                    ? "Vui lòng tải lại trang. Nếu vẫn lỗi, liên hệ Khoa qua thông tin ở cuối trang."
+                    ? "Có thể do kết nối mạng hoặc máy chủ đang bận. Nếu thử lại vẫn lỗi, liên hệ Khoa qua thông tin ở cuối trang."
                     : "Chương trình không tồn tại hoặc đã bị gỡ. Xem các chương trình đang mở ở trang danh sách."}
+                action={loi
+                    ? <MyButton text="Thử lại" variant="primary" onClick={() => setLanTai((n) => n + 1)} />
+                    : undefined}
             />
             <p className={styles.veDanhSach}><Link to={DUONG_DAN_TAI_TRO}>← Về danh sách chương trình</Link></p>
         </div></TrangCongKhai>;
@@ -388,8 +411,10 @@ const TaiTroChiTietPage: React.FC = () => {
                                 {dangDienRa ? "Đang diễn ra" : "Đã diễn ra"}
                             </span>
                             <h1 className={styles.bannerTen}>{ct.ten}</h1>
-                            <p className={styles.bannerPhu}>{ct.mo_ta_ngan}</p>
-                            <p className={styles.bannerMoTa}>{ct.mo_ta_day}</p>
+                            {/* Ba tầng văn bản (ITaiTro.ts): phu_de + loi_keu_goi ở banner, mo_ta_day ở khối
+                                "Thông tin chương trình". 🔄 Tới P2b banner in mo_ta_day — trùng khối thông tin. */}
+                            <p className={styles.bannerPhu}>{ct.phu_de}</p>
+                            <p className={styles.bannerMoTa}>{ct.loi_keu_goi}</p>
                             <p className={styles.bannerChan}>
                                 <span><CalendarIcon size={14} /> Thời gian: <b>{dinhDangNgay(ct.tu_ngay).day} – {dinhDangNgay(ct.den_ngay).day}</b></span>
                                 <span><LocationIcon size={14} /> Đơn vị tổ chức: <b>{ct.don_vi_to_chuc}</b></span>

@@ -293,8 +293,9 @@ namespace ApiQuanLyTaiTro.Common
             }
             catch (Exception ex)
             {
-                response.code = ResponseCode.SYSTEM_ERROR;
-                response.message = ResponseDetail.SYSTEM_ERRORDETAIL + ": " + ex.Message;
+                // 🔄 Trước P2a: gán code + "Lỗi hệ thống: " + ex.Message (lộ chữ SQL) và QUÊN is_success = false.
+                // Nay đi qua cửa chung — log + câu chung + is_success = false (luật ở ExceptionHelper).
+                ex.ErrorSysResponse(response);
             }
             return response;
         }
@@ -317,8 +318,9 @@ namespace ApiQuanLyTaiTro.Common
             }
             catch (Exception ex)
             {
-                response.code = ResponseCode.SYSTEM_ERROR;
-                response.message = ResponseDetail.SYSTEM_ERRORDETAIL + ": " + ex.Message;
+                // 🔄 Trước P2a: gán code + "Lỗi hệ thống: " + ex.Message (lộ chữ SQL) và QUÊN is_success = false.
+                // Nay đi qua cửa chung — log + câu chung + is_success = false (luật ở ExceptionHelper).
+                ex.ErrorSysResponse(response);
             }
             return response;
         }
@@ -341,8 +343,9 @@ namespace ApiQuanLyTaiTro.Common
             }
             catch (Exception ex)
             {
-                response.code = ResponseCode.SYSTEM_ERROR;
-                response.message = ResponseDetail.SYSTEM_ERRORDETAIL + ": " + ex.Message;
+                // 🔄 Trước P2a: gán code + "Lỗi hệ thống: " + ex.Message (lộ chữ SQL) và QUÊN is_success = false.
+                // Nay đi qua cửa chung — log + câu chung + is_success = false (luật ở ExceptionHelper).
+                ex.ErrorSysResponse(response);
             }
             return response;
         }

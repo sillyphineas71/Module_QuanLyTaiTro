@@ -37,6 +37,40 @@ chọn cách thi công khi kết quả nhìn thấy không đổi.
 
 ---
 
+## 1b. 🔴 Việc KHÔNG PHẢI THI CÔNG TRỰC TIẾP — nêu chi phí, HỎI TRƯỚC
+
+Việc lead giao là **thi công**. Mọi việc **quanh** nó — **kiểm tra, dọn nợ, tài liệu, hạ tầng, script phụ trợ,
+thí nghiệm chứng minh, đối chứng âm** — trước khi làm phải nêu đủ năm ý rồi **chờ lead quyết**:
+
+| Nêu | Ví dụ viết đúng |
+|---|---|
+| **Việc gì** | "Viết script so DDL bảng file ↔ DB" |
+| **Tốn bao lâu** | ước lượng thô là được ("~20 phút, 2–3 lần chạy thử") |
+| **Được gì** | "biết DB dev có lệch file sau 4 lần đổi DDL không" |
+| **Mất gì** | thời gian · thêm một file phải giữ · thêm một bước triển khai |
+| **Bỏ thì rủi ro gì** | "lệch kiểu/độ dài cột không ai bắt, lộ ra khi P2 map DTO" |
+
+**Vì sao có luật này:** chuỗi P1 (2026-09-17) tốn **hơn hai tiếng** cho việc vốn chỉ là "tạo 8 bảng, 5 view, 5 SP,
+cấp quyền". Phần lớn thời gian đi vào script kiểm, đối chứng âm, thí nghiệm chứng minh — mỗi cái nghe nhỏ, cộng lại
+thành một buổi. Nhiều cái hữu ích thật — **nhưng lead phải được chọn**, vì chỉ lead biết buổi đó còn việc gì khác.
+
+**Ví dụ thật — agent TỰ THÊM trong chuỗi P1, không hỏi trước** (cả thảy đều hữu ích, và đều lẽ ra phải hỏi):
+- Khối **nối lại user mồ côi** trong `00_TaoLogin_TaiTro.sql`.
+- Lỗi **50021** (đối tượng TT_ không do `dbo` sở hữu) và **50022** (chưa có user) trong `90_CapQuyen_TaiTro.sql`.
+- Vòng **REVOKE quyền view cũ** trong `90_` — lead chỉ nói "gỡ GRANT view khỏi script".
+- File **`97_ChayThu_CapQuyen.sql`** — lead hỏi "có cách nào kiểm SQL động không?"; câu đúng là trả lời + nêu chi phí,
+  không phải dựng luôn file.
+- Script **quét PARSEONLY/NOEXEC toàn bộ `.sql`** và **so định nghĩa view/SP file ↔ DB**; **bộ giả lập SSMS**.
+- 🔄 Lead nêu `96_SoDDL_Bang` làm ví dụ thứ nhất — **không đúng**: lead đã giao nó ("2. ✅ THÊM CÁCH SO DDL BẢNG GIỮA
+  FILE VÀ DB"). Còn *ý tưởng* so file ↔ DB thì agent đưa ra trước đó, ở dạng đề xuất — đó là cách làm đúng.
+
+**KHÔNG áp cho:** sửa lỗi rõ ràng trong phạm vi lô · đặt tên · tách hàm (xem §1 "không cần hỏi").
+⚠️ Kiểm tra **chính việc vừa thi công** (build, chạy file vừa viết một lần) vẫn là một phần của thi công — không
+phải hỏi. Thứ phải hỏi là kiểm tra **vượt** mức đó: script kiểm mới, đối chứng âm, thí nghiệm, quét toàn repo.
+⚠️ **Khi không chắc một việc thuộc nhóm nào → HỎI.**
+
+---
+
 ## 2. Bác lại lead khi có bằng chứng
 
 Đây là **nghĩa vụ**, không phải quyền.

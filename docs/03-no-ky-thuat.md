@@ -20,7 +20,12 @@ Mở từ lô **P1 (dựng khung)**. Mỗi mục: *cái gì · vì sao chấp nh
 ⚠️ **Hết đối chiếu tên 1–1 với repo gốc.** Cần chép thêm gì từ bên đó thì khi dán: đổi `Alumni` →
 `App`, bỏ tầng `cuu-sinh-vien/`, và bỏ tiền tố `/alumni` khỏi mọi đường dẫn.
 
-## N2. Module tài trợ chạy trên dữ liệu cứng
+## N2. ~~Module tài trợ chạy trên dữ liệu cứng~~ — ĐÃ TRẢ (P2b, 2026-09-17)
+
+✅ Hai màn gọi API qua `services/taiTroApi.ts`; `taiTroMock.ts` giữ lại, **không còn được import** (bộ 7 ca xấu để
+đối chiếu). 🔄 Dự đoán "màn hình không phải sửa" **không đúng hẳn**: hợp đồng `ITaiTro.ts` lệch BE 5 chỗ (tên trường),
+màn phải đổi `mo_ta_ngan` → `phu_de`/`loi_keu_goi` và thêm "Chủ tài khoản"; ngoài ra thêm trạng thái lỗi có Thử lại.
+Trạng thái cũ, giữ để biết:
 
 `taiTroMock.ts` — hai màn T1/T2 chưa gọi API nào.
 
@@ -302,3 +307,243 @@ chưa đo** ở trần mới — làm đường 2 thì đo lại.
 **Cách thứ ba (ghi để khỏi quên, chưa đề xuất):** rút gọn GIÁ TRỊ thay vì bỏ cột — Khoá hiện năm nhập học
 ("1994", ~60px), Hệ viết tắt ("CQ", "VLVH"). Cần bảng quy đổi tên hệ → viết tắt mà hiện **không có**, và
 khoá một năm đứng một mình dễ đọc nhầm năm tốt nghiệp.
+
+## N19. API đọc công khai (P2a): năm chỗ tạm (điểm 5 đã dọn)
+
+**1. Chưa có cache.** SP 01 ghi "lớp chống lạm dụng của endpoint công khai là cache ở tầng service (P2)".
+P2a cố ý không làm (lead). Hiện mỗi lượt khách mở trang chi tiết = **3 lượt gọi SP** (02 + 03 + 04,
+song song), mỗi lượt mở trang danh sách = 1. Không có rate limit ⇒ endpoint công khai hiện **không có
+lớp chống lạm dụng nào**. **Ai dọn:** lô cache sau P2c. **Mở lại khi:** trước khi cổng ra Internet.
+
+**2. `/nha-tai-tro` và `/khoan-chi` gọi thêm SP 02 để kiểm tồn tại.** SP 03/04 một mình trả `[]` cho cả
+"không tồn tại", "nháp" lẫn "công khai nhưng chưa có ai" ⇒ không phân biệt được 404 với 200 `[]`. Cái
+giá: 2 lượt gọi thay vì 1, và SP 02 kéo cả `mo_ta_day` NVARCHAR(MAX) chỉ để biết "có dòng". **Dọn khi:**
+làm cache (điểm 1) — kiểm tồn tại đọc từ cache chi tiết; hoặc thêm SP `TT_CongKhai_ChuongTrinhTonTai`.
+
+**3. 404 map ở `TaiTroController.KetQua`, KHÔNG ở `ResponseBase.ToActionResult()`.** `ToActionResult`
+trả **400** cho MỌI mã khác SUCCESS, kể cả `DATA_NULL` — di sản repo cũ (tin tức công khai repo cũ trả
+400 cho "không tìm thấy"). Sửa ở `ResponseBase` là đổi hợp đồng HTTP cho mọi controller sau này ⇒ phải
+hỏi. Controller mới cần 404 thì chép `KetQua`, đừng gọi thẳng `ToActionResult`.
+✅ **Lead chốt (2026-09-17): KHÔNG đụng `ToActionResult`** — giữ nợ. Hệ quả còn lại: lỗi hệ thống ra **400**, không
+phải 500 (xem điểm 5).
+
+**4. Ngày ra JSON dạng `"2025-09-15T00:00:00"`, không phải `"2025-09-15"`.** Cột DATE map vào `DateTime`
+(quy ước repo cũ; Dapper + System.Data.SqlClient không map `DateOnly` sẵn). `ITaiTro.ts` ghi `ngay_sinh`
+là ISO `yyyy-MM-dd` ⇒ **lệch hợp đồng**, việc của P2b: FE cắt 10 ký tự đầu, hoặc BE đổi sang `DateOnly`
++ type handler (thêm code hạ tầng — phải hỏi).
+
+**5. ~~Lỗi hệ thống lộ chữ SQL ra ngoài~~ — ✅ ĐÃ CHE (P2a, cùng ngày).**
+🔄 Trạng thái cũ: `ErrorSysResponse` ghép `ex.Message` vào `message` ⇒ endpoint CÔNG KHAI trả nguyên văn
+"Login failed for user TT_APP_USER"; lỗi đã catch ở service KHÔNG được ghi log ở đâu cả.
+Nay: ba cửa biến Exception thành response (`ErrorSysResponse`, middleware `ConfigureExceptionHandler`,
+`CheckInsert/Update/Delete`) đều trả "Có lỗi xảy ra, vui lòng thử lại." và ghi chi tiết vào log (Serilog; tắt
+`EnableRequestLog` thì stderr). Luật: `docs/02` D5.
+**Còn lại:**
+- lỗi hệ thống vẫn ra HTTP **400** (không 500) — hệ quả điểm 3;
+- client **không có mã tra log** — người dùng báo lỗi thì chỉ tìm được theo giờ. Đề xuất (chưa làm, đổi hợp đồng
+  API ⇒ hỏi): trả `HttpContext.TraceIdentifier` trong response lỗi và ghi cùng mã vào log;
+- `EmailService` còn ghép `ex.Message` vào `LyDoDungSom` (dòng 199, 240) — chưa endpoint nào trả nó ra; khi
+  có màn gửi mail thì phải đi qua cửa chung;
+- nhánh middleware **chưa thử thật** (chưa có cách gây exception lọt khỏi service mà không thêm code thử).
+
+## N20. 🔴 File quyền chạy SAU CÙNG — lỗi triển khai đã xảy ra thật, SẼ LẶP Ở SERVER CÔNG TY
+
+**Chuyện gì đã xảy ra (2026-09-17, lead triển khai P1 lên `MSSQLSERVER01`):** API trả lỗi cho mọi endpoint.
+Log API lúc 15:07:57: `The EXECUTE permission was denied on the object 'TT_CongKhai_GetDanhSachChuongTrinh'`.
+`01_CreateLogin_TaiTro.sql` đã chạy **trước khi có SP**: vòng lặp cấp quyền cấp được 0 quyền, in một dòng
+`PRINT` lẫn trong output, sqlcmd trả mã 0 — trông như thành công.
+
+**Chẩn đoán ban đầu "thiếu GRANT SELECT trên view" là SAI** — chứng minh trên DB thật: thu hết SELECT trên 5
+view trong một transaction, `TT_APP_USER` vẫn gọi được cả 4 SP `TT_CongKhai_*` (ownership chaining, mọi đối
+tượng cùng chủ `dbo`), rồi ROLLBACK. "View 0 dòng" là vì **8 bảng TT_ đều rỗng**, không phải vì quyền.
+🔄 Quyền SELECT trên view: thêm vào script → **GỠ cùng ngày** (lead: không cấp thứ không cần). `90_CapQuyen` nay
+còn REVOKE quyền view cũ, và ghi rõ khi nào PHẢI cấp: view do chủ sở hữu KHÁC `dbo` (chuỗi đứt — file dừng
+bằng lỗi 50021 ở ca đó).
+
+**Vì sao dễ lặp lại:** tên file bắt đầu `01_` (đọc như bước đầu); `README.md` ghi "Lần đầu: … tài khoản SQL
+riêng, script tạo ở `01_CreateLogin…`"; header file SQL đưa lệnh chạy không kèm thứ tự. `TRIEN_KHAI_P1.md`
+thì xếp ĐÚNG (Bước 4) — nhưng người triển khai không nhất thiết mở nó trước.
+
+**Đã sửa (lô này):**
+- Bước 5 của file quyền **kiểm trước, thiếu là `THROW 50020`** (sàn: 8 bảng · 5 view · 5 SP) — chạy nhầm thứ tự
+  thì dừng bằng lỗi đọc được, login + user vẫn đã tạo, chỉ việc chạy lại ở cuối.
+- Header file SQL, `TRIEN_KHAI_P1.md`, `README.md`: ghi "chạy SAU CÙNG" + lý do + lỗi thật.
+
+**✅ ĐÃ TÁCH (lead duyệt, cùng ngày):** `01_CreateLogin_TaiTro.sql` → `00_TaoLogin_TaiTro.sql` (login + user,
+chạy đầu; tự nối lại user mồ côi) + `90_CapQuyen_TaiTro.sql` (mọi GRANT/DENY/REVOKE, chạy cuối, chạy lại sau mỗi
+lô thêm đối tượng). Tên file nói luôn thứ tự. Sửa đủ 6 chỗ tham chiếu (README, docs/01, TRIEN_KHAI, 99_KiemTra,
+TT_NhaTaiTro.sql, TT_MaDoiPhien.sql) — `grep 01_CreateLogin` chỉ còn ra các dòng LỊCH SỬ.
+Kèm `97_ChayThu_CapQuyen.sql`: chạy chính `90_` trong transaction rồi ROLLBACK, tự kiểm 8 ca (N21).
+
+**Luật cho mọi lô sau:** thêm bảng/view/SP `TT_*` ⇒ **chạy lại file quyền ở cuối lô**. `CREATE OR ALTER` giữ
+quyền của SP đã có; SP MỚI không có quyền nào — API lỗi "EXECUTE permission was denied" đúng như lần này.
+**Áp dụng khi triển khai lên server công ty:** làm theo `TRIEN_KHAI_P1.md` từ trên xuống, không chạy file
+theo thứ tự tên.
+
+⚠️ **Lỗi phụ tìm thấy cùng lúc:** `99_KiemTra_P1.sql` KIỂM 7 có `p.perm  ission_name` (tên cột bị tách) — lỗi
+cú pháp Msg 4145, nên KIỂM 7 **chưa từng chạy được**; báo cáo "KIỂM 7 ra 0 dòng" trước đó không có cơ sở. Đã
+sửa; chạy thật: 0 dòng GRANT sai + đúng 2 dòng DENY. Rà toàn bộ: N21.
+
+## N21. Rà toàn bộ `.sql` sau vụ KIỂM 7 — kết quả và chỗ còn hở (2026-09-17)
+
+**Bối cảnh:** "KIỂM 3/6/7 ra 0 dòng" từng được dùng để kết luận P1 xong, trong khi KIỂM 7 có lỗi cú pháp và
+**chưa từng chạy**. Luật rút ra: `docs/02` C5.
+
+**Đã kiểm, bằng máy, kèm đối chứng âm cho từng lớp (cài lỗi → phải bắt được):**
+
+| Lớp | Bắt được | Kết quả (23 file) | Đối chứng âm |
+|---|---|---|---|
+| `SET PARSEONLY ON` | lỗi CÚ PHÁP | 0 lỗi | cài `FROMM` → Msg 102 ✅ |
+| `SET NOEXEC ON` (98, 99, 00, 90) | tên CỘT/BẢNG sai (biên dịch, không chạy) | 0 lỗi | cài `permision_name` → Msg 207 ✅ |
+| So định nghĩa FILE ↔ DB (5 view + 5 SP) | file sửa sau khi triển khai | 10/10 thân khớp; 1 lệch **chỉ trong chú thích** (xem dưới) | — |
+| Chạy thật `99_KiemTra` | KIỂM sai / không chạy | KIỂM 1–7 đúng kỳ vọng; KIỂM 3 **không đạt suông** (4 SP có ghi phụ thuộc, đều trỏ view) | 🔄 bản tự THROW: hỏng KIỂM 1 → 50101 ✅ · hỏng KIỂM 7 → 50107 ✅ |
+| Chạy thật `96_SoDDL_Bang` (thêm sau) | DDL bảng DB lệch file | 8 bảng / 102 cột khớp | lệch độ dài + nullable + cột thừa → 50096, đủ 3 ✅ |
+| Chạy thử `97_ChayThu_CapQuyen` | **SQL động** trong `90_` | PASS 8 ca, ROLLBACK, quyền DB không đổi | cài GRANT view → FAIL 2 ✅ |
+
+⚠️ `PARSEONLY` **bỏ lọt** đúng loại lỗi `permision_name` (tên cột sai vẫn là cú pháp hợp lệ) — lớp NOEXEC là bắt buộc.
+
+**SQL ĐỘNG — chỉ MỘT chỗ trong cả `DB_Setup/` + `StoredProcedures/`:** `90_CapQuyen_TaiTro.sql` khối 3b
+(`sp_executesql @sql` — sinh GRANT bảng/SP + REVOKE view). Tìm bằng `grep -i "sp_executesql\|EXEC *(\|EXEC *@"`.
+Kiểm được bằng cách **chạy thật trong transaction rồi ROLLBACK** (GRANT/REVOKE/DENY rollback được) — đó là
+`97_ChayThu_CapQuyen.sql`, dùng `:r` chạy CHÍNH file 90 chứ không chép logic. **Không còn là lỗ**, với điều kiện
+chạy 97 sau mỗi lần sửa 90. Thêm SQL động ở chỗ khác ⇒ phải có cách chạy thử tương tự, ghi vào bảng này.
+
+**CÒN HỞ — lead xử:**
+1. ✅ **ĐÃ DỌN: lead chạy `98_` 2026-09-17 — PASS 19/19, đã ROLLBACK.** Trạng thái cũ (giữ để biết vì sao):
+   🔴 **`98_ThuNghiem_ChanLoDuLieu.sql` CHƯA TỪNG CHẠY trên DB này** — bằng chứng: `sys.identity_columns.last_value`
+   của mọi bảng TT_ là NULL (insert đã rollback vẫn để lại last_value). "PASS 19/19" chưa được chứng minh ở đây.
+   Chỉ mới qua NOEXEC (biên dịch). **Chưa chạy thật vì:** nó tiêu IDENTITY ⇒ dữ liệu mẫu lead sắp nhập sẽ có id
+   bắt đầu từ 4 (`TT_ChuongTrinh`), không từ 1. **Đề xuất:** chạy 98 TRƯỚC khi nhập dữ liệu mẫu, chấp nhận id
+   nhảy cóc (hoặc `DBCC CHECKIDENT … RESEED` sau đó — thêm một thao tác ghi, lead quyết).
+2. ~~**`99_KiemTra` không tự báo sai**~~ — ✅ **ĐÃ DỌN (lead duyệt, cùng ngày).** 🔄 Trước: kiểu "PHẢI RA 0 DÒNG" cần
+   người ĐỌC — chính kiểu đã lừa ở KIỂM 7. Nay mỗi KIỂM tự THROW mã riêng **50101…50107** (n = số KIỂM), dừng ở KIỂM
+   hỏng đầu tiên, mã thoát ≠ 0, và kiểm cả **tiền đề** (tập dò không rỗng). Chạy thật: PASS 7/7. Đối chứng âm: hỏng
+   KIỂM 1 ⇒ 50101 ngay khối đầu; hỏng KIỂM 7 ⇒ KIỂM 1–6 đạt rồi 50107.
+   ⚠️ Cái giá của "dừng ở KIỂM hỏng đầu tiên": hai KIỂM cùng hỏng thì phải sửa xong cái đầu mới thấy cái sau.
+3. **DB lệch file một chữ chú thích:** `TT_CuuSV_GetLichSuTaiTroCuaToi` trên DB có "quyền **akhác** nhau", file là
+   "khác". Thân SP khớp từng từ ⇒ vô hại. Lead: ghi nhận, không làm — đã ghi ở Bước 3 `TRIEN_KHAI_P1.md`.
+4. ~~**Bảng không so FILE ↔ DB được như view/SP**~~ — ✅ **ĐÃ DỌN:** `96_SoDDL_Bang.sql` dựng 8 bảng từ CHÍNH file bảng
+   trong `tempdb` (transaction → ROLLBACK), so `INFORMATION_SCHEMA.COLUMNS` với DB: có bảng · có cột · kiểu · độ dài ·
+   precision/scale · nullable. Lệch ⇒ THROW 50096. **Chạy thật trên `MSSQLSERVER01`: 8 bảng / 102 cột KHỚP file**,
+   0 cột khác thứ tự — bốn lần đổi DDL sau lần chạy đầu (ngay_sinh, loi_keu_goi, ten_chu_tai_khoan, bỏ
+   ten_chuyen_nganh) **đều đã lên DB**. Đối chứng âm (bản chép TT_DuKienChi: độ dài 500→400, thu_tu NOT NULL→NULL,
+   thêm cột) ⇒ bắt đủ 3 lệch.
+   **Còn KHÔNG so — NỢ ĐÃ CHỐT (lead 2026-09-17: "đủ rồi", không làm):** default · index · identity · collation ·
+   thứ tự cột (in để biết, không tính lệch). Lệch ở những thứ đó vẫn lọt. **Mở lại khi:** có lô đổi index/default,
+   hoặc triển khai lên server có collation khác DB dev.
+5. ✅ **ĐÃ DỌN:** 5 quyền SELECT trên view cấp tay đã hết — đo lại 2026-09-17: 0 quyền trên view TT_ (lead đã chạy
+   `90_CapQuyen` thật).
+6. ✅ **ĐÃ DỌN — `96_`/`97_` báo PASS GIẢ khi `:r` không nạp được.** Lead chạy `97_` ba lần: SSMS thường, sqlcmd sai
+   thư mục — **cả hai in PASS** (kiểm trên quyền cũ); chỉ lần từ gốc repo là thật. Tái hiện được ca sqlcmd sai thư mục
+   (thiếu `-b`: `:r` in lỗi, script chạy tiếp, in PASS). Sửa: `:on error exit` đầu file + `97_` xoá/kiểm **dấu phiên**
+   `SESSION_CONTEXT('TT_90_CapQuyen')` do `90_` đặt ở cuối file (THROW 50031); `96_` có sẵn dấu tự nhiên — không dựng đủ
+   8 bảng trong tempdb ⇒ THROW 50095. **Ma trận thử:**
+
+   | Cách chạy | `97_` | `96_` |
+   |---|---|---|
+   | sqlcmd, gốc repo, `-b` | PASS ✅ | PASS ✅ |
+   | sqlcmd, SAI thư mục, KHÔNG `-b` | exit 1, không PASS ✅ | exit 1, không PASS ✅ |
+   | giả lập SSMS không SQLCMD Mode (tách GO, lỗi thì chạy tiếp) | 50031, **0 dòng PASS** ✅ | 50095, **0 dòng PASS** ✅ |
+
+   Đối chứng cho bộ giả lập: chạy `99_` (không dùng `:r`) qua đó ⇒ thấy PASS — bộ giả lập không "mù" PASS.
+   ⚠️ SSMS thật chưa bấm thử — dùng bộ giả lập (SqlClient, cùng phiên, lỗi đi tiếp).
+
+## N22. GRANT đọc bảng ngoài `TT_*` — không cần cho SP tĩnh; `STU_DanhSach` cố ý KHÔNG cấp (2026-09-17)
+
+**Yêu cầu:** thêm `STU_DanhSach` vào `90_CapQuyen` (P3 điền sẵn khoá/lớp; lead từng cấp tay một lần — đo lại DB lúc
+lô này: **không có** quyền nào trên `STU_DanhSach`).
+**Không làm, vì đã thử trên DB thật** (transaction → ROLLBACK, không để lại gì):
+- SP chủ `dbo` đọc `STU_DanhSach` JOIN `STU_Lop` JOIN `STU_HoSoSinhVien` ON `ID_sv`, gọi bằng `TT_APP_USER` ⇒ **chạy
+  được**, dù `TT_APP_USER` không có quyền trên `STU_DanhSach` và không có quyền cột `ID_sv`. Đọc thẳng ⇒ lỗi 229.
+- SP chủ `dbo` chạy **SQL động** đọc `STU_DanhSach` ⇒ **lỗi 229** — chuỗi sở hữu đứt ở `sp_executesql`.
+⇒ Cùng cơ chế đã gỡ quyền view: SP tĩnh không cần GRANT trên bảng nào. Và `STU_DanhSach` chứa **`Mat_khau`,
+`Mat_khau_phu_huynh`, `No_hoc_phi`** — GRANT cả bảng cho cổng công khai là lộ mật khẩu SV.
+**Nếu P3 hỏng ở điền sẵn khoá/lớp:** nguyên nhân không phải thiếu GRANT — đọc nguyên văn lỗi. Chỉ khi SP P3 dùng SQL
+động mới cấp, **theo cột** (`ID_sv`, `ID_lop`, `IsDeleted`).
+**Bảng P3/P4 sẽ đọc** (qua SP, không cần GRANT): `CSV_TaiKhoan` (id_sv, id_lop, vai_tro, trang_thai, is_deleted) ·
+`STU_HoSoSinhVien` (ID_sv, Ho_ten, Ngay_sinh) · `STU_DanhSach` (ID_sv, ID_lop, IsDeleted) · `STU_Lop` (Ten_lop, ID_he,
+ID_khoa, ID_chuyen_nganh, Nien_khoa) · `dmHe` · `dmKhoa` · `dmChuyenNganh` · `TT_MaDoiPhien`. Khoá = `STU_Lop.Nien_khoa`
+(cách cổng cựu SV làm, `CSV_ThongKe_GetDanhMucKhoaHoc`). ⚠️ `CSV_TaiKhoan` có sẵn `id_lop` — có thể không cần đi qua
+`STU_DanhSach`; P3 quyết.
+~~**CÂU HỎI CHO LEAD:** khối 3 của `90_` còn GRANT SELECT trên 7 bảng ngoài TT_ — không cần cho SP tĩnh, nên gỡ?~~
+✅ **Lead chốt 2026-09-17: GIỮ.** Vì: rủi ro thấp hơn hẳn `STU_DanhSach` (không bảng nào chứa mật khẩu sau khi sửa dưới)
+· là lưới an toàn nếu sau này có SP dùng SQL động · gỡ tốn thêm một vòng trong khi đã dừng nhánh hạ tầng.
+**Kèm một sửa:** `CSV_TaiKhoan` CÓ cột `mat_khau` (và `provider_key`) mà đang cấp CẢ BẢNG ⇒ đổi sang **theo cột**
+(`id, email_dang_nhap, id_sv, vai_tro, id_lop, trang_thai, is_deleted`), REVOKE cả bảng trước. Thử trong transaction:
+đọc `mat_khau` = 0, `provider_key` = 0, `vai_tro` = 1.
+**Và `CSV_ThongTin` theo cột** (lead giao cùng ngày): `id_tai_khoan, sdt_hien_tai, email_hien_tai, is_deleted` — bỏ
+`dia_chi_hien_tai`, `ghi_chu` (chữ tự do), `id_tinh_thanh`, `id_xa_phuong`: `TT_NhaTaiTro` chỉ có `sdt_lien_he` /
+`email_lien_he`, không có gì để điền địa chỉ vào. Thử trong transaction: `dia_chi_hien_tai` = 0, `ghi_chu` = 0, `sdt_hien_tai` = 1.
+Đo DB dev sau lô: **cả hai bảng đã ở dạng theo cột, khớp file** (7 + 4 cột, không còn quyền cả bảng).
+**Nợ (ghi, không làm — lead):** `STU_Lop`, `dmHe`, `dmKhoa`, `dmChuyenNganh` vẫn cấp cả bảng; chỉ rà theo TÊN cột, không
+thấy cột nhạy cảm. Mở lại khi: bảng danh mục nào thêm cột ngoài tên/mã, hoặc có ai đề xuất thêm bảng ngoài TT_ vào khối 3.
+
+## N23. ~~P2b: ô định danh bị CHE (ẩn danh mức 2) vẫn vẽ "—" như ô không có dữ liệu~~ — ĐÃ TRẢ (2026-09-17)
+
+✅ Cột Lớp: `an_dinh_danh` ⇒ "Ẩn" (nghiêng, mờ); mức 1 giữ lớp thật; doanh nghiệp vẫn "—". Kiểm trên trang thật (8082):
+CT1 dòng ẩn danh mức 1 → "K39A" · CT4 dòng mức 2 → "Ẩn" · "Công ty TNHH ABC" → "—". Rà cả bảng: không còn cột nào
+lẫn hai nghĩa (Họ tên / Ngày sinh đã tách; Số tiền, Thời gian không bao giờ null). Trạng thái cũ, giữ để biết:
+
+**Cái gì:** API có `an_dinh_danh` (P2a); P2b thêm vào `ITaiTro.ts` nhưng **màn chưa dùng**. Nhà tài trợ ẩn danh mức 2
+(giấu tất cả) có `ten_lop = null` VÌ BỊ CHE — cột Lớp vẽ "—", trùng ký hiệu với doanh nghiệp (không có lớp). Luật A7
+muốn hai nghĩa tách nhau (cột Ngày sinh đã tách: "Ẩn" vs "—"). Hiện bảng chỉ còn cột Lớp mang định danh nên lệch
+đúng một ô. **Dọn:** cột Lớp `n.an_dinh_danh ? <span className={styles.anDanh}>Ẩn</span> : oHoacGach(n.ten_lop)` —
+cùng khuôn cột Ngày sinh. Chưa làm vì ngoài phạm vi P2b (lead: bỏ mock, không đổi hiển thị). **Ai:** lô FE kế.
+
+## N24. Loại nhà tài trợ (`loai`) KHÔNG được che, kể cả ẩn danh mức 2 — cố ý, lead chốt 2026-09-17
+
+**Cái gì:** view `TT_v_NhaTaiTroCongKhai` che tên, ngày sinh, hệ/khoa/khoá/lớp theo `muc_an_danh`, nhưng trả `loai`
+nguyên vẹn. Trang chi tiết lọc bảng theo tab Cá nhân / Tập thể / Doanh nghiệp ⇒ một dòng ẩn danh mức 2 ("giấu tất
+cả") vẫn lộ ra là cá nhân, tập thể hay doanh nghiệp.
+
+**Vì sao KHÔNG che** (lead, khi agent nêu ở lô N23 — ai nêu lại thì đây là câu trả lời):
+1. **Không định danh được ai:** "một doanh nghiệp ẩn danh tài trợ" không cho biết doanh nghiệp nào.
+2. **Che thì tab lọc hỏng:** dòng ẩn danh không thuộc tab nào, hoặc phải thêm tab "Không rõ".
+3. **Người chọn ẩn danh muốn giấu DANH TÍNH**, không giấu việc mình là doanh nghiệp.
+
+**Mở lại khi:** có chương trình mà chỉ **MỘT** doanh nghiệp (hoặc một tập thể) tài trợ — khi đó "doanh nghiệp ẩn danh"
+cộng thông tin bên ngoài (tin tức, lễ trao, biển ghi danh…) có thể đủ để đoán ra là ai. Lúc đó mới xem lại; hướng
+xử (chưa chọn): che `loai` ở view khi mức 2 và nhóm dòng đó vào một tab/nhãn riêng, hoặc chỉ che khi nhóm loại đó
+của chương trình có đúng một dòng.
+**Nơi đổi nếu mở lại:** view 03 (`DB_Setup/Views/03. TT_v_NhaTaiTroCongKhai.sql`) + tab lọc `theoLoai` ở
+`TaiTroChiTietPage.tsx` — hai chỗ đổi cùng nhau.
+
+## N25. 🔴 Endpoint khai tài trợ CÔNG KHAI không có chống lạm dụng (P3a) — lead: ghi nợ, CHƯA làm
+
+**Cái gì:** `POST api/tai-tro/chuong-trinh/{id}/tai-tro` không cần đăng nhập, không rate limit, không captcha. Mỗi lượt
+hợp lệ tạo 1 dòng `TT_NhaTaiTro` chờ duyệt + tối đa 5 file (≤ 7,5 MB) trên đĩa. Một script lặp là đủ để:
+làm đầy đĩa (1.000 lượt × 7,5 MB ≈ 7,5 GB) · ngập hàng đợi duyệt bằng lời khai rác (quản trị không phân biệt nổi).
+
+**Rủi ro thật hiện nay: THẤP.** Cổng nội bộ Khoa, chưa phát hành, ít người biết URL; lời khai không bao giờ tự hiện ra
+ngoài (phải được duyệt). Hậu quả tệ nhất là phiền (đĩa, hàng đợi), không lộ dữ liệu.
+**Tăng lên khi:** URL chương trình được chia sẻ công khai — tức ngay lúc P3b phát hành modal.
+
+**Cách xử khi cần** (rẻ → đắt):
+1. **Rate limit theo IP — có sẵn trong .NET 8, không thêm gói** (`Microsoft.AspNetCore.RateLimiting`), ~8 dòng:
+   `AddRateLimiter` với policy `FixedWindowLimiter` phân vùng theo `RemoteIpAddress` (vd. 5 lượt / 10 phút) +
+   `app.UseRateLimiter()` + `[EnableRateLimiting("khai-tai-tro")]` trên action.
+   ⚠️ Sau reverse proxy thì IP là của proxy — `UseForwardedHeaders` (đã có) phải chạy trước, và `KnownProxies.Clear()`
+   hiện tin MỌI proxy ⇒ `X-Forwarded-For` giả được. Cấu hình proxy thật khi deploy.
+2. **Trần theo chương trình:** `TT_NhaTaiTro_Tao` từ chối khi số lời khai chờ duyệt của chương trình vượt N (vd. 200) —
+   chặn ngập hàng đợi mà không phụ thuộc IP. Một điều kiện trong SP.
+3. **Captcha** (Turnstile / reCAPTCHA) ở modal P3b — dịch vụ ngoài + khoá bí mật: phải hỏi.
+4. **Hạn mức đĩa:** kiểm dung lượng trống trước khi ghi, dưới ngưỡng thì từ chối — không để đầy ổ chung với DB.
+**Ai / khi nào:** trước khi P3b phát hành modal ra ngoài. Lead chọn cách.
+
+## N26. Ảnh chuyển khoản lưu trên ĐĨA máy chủ API (P3a) — tạm
+
+**Cái gì:** file ở `<content root>/Assets/RiengTu/AnhChuyenKhoan/{guid}.{ext}`; DB chỉ lưu tên file.
+✅ **Lead duyệt giữ `Assets/RiengTu` (2026-09-17)** — luật `docs/02` E1. 🔄 Ban đầu lệnh lô chốt "Assets/Upload": `Program.cs` phục vụ `Assets/Upload` **công khai** tại `/Assets/Upload`, mà ảnh CK
+chứa họ tên chủ tài khoản, số tài khoản, số dư — kể cả của người chọn ẩn danh; DDL `TT_AnhChuyenKhoan` đã ghi "không được
+phục vụ ở đường tĩnh công khai". `Assets/RiengTu` không có `UseStaticFiles` nào trỏ tới (đo P3a: GET trả 404).
+
+**Kiểu hỏng đã biết:**
+1. **MẤT KHI DEPLOY** nếu quy trình deploy xoá/ghi đè thư mục ứng dụng (publish ra thư mục mới, container không volume).
+   Mất ảnh = lời khai chờ duyệt không còn chứng cứ. **Dọn:** đưa thư mục ra ngoài thư mục ứng dụng (đường dẫn cấu hình) hoặc
+   lưu trữ đối tượng. Trước lần deploy đầu lên server công ty.
+2. **KHÔNG CÓ SAO LƯU** — backup DB không gồm file. Cùng thời điểm với (1).
+3. **FILE MỒ CÔI:** thứ tự ghi là FILE trước, DB sau (lý do: khối chú thích trong `KhaiTaiTroService`). DB lỗi/từ chối thì
+   `finally` xoá file ngay; chỉ còn mồ côi khi xoá cũng lỗi hoặc tiến trình chết giữa chừng. Vô hại, chỉ tốn đĩa.
+   **Dọn:** việc định kỳ so thư mục ↔ `TT_AnhChuyenKhoan.ten_file`, xoá file không có dòng nào VÀ cũ hơn 1 giờ. Chưa viết.
+4. **CHƯA CÓ ĐƯỜNG XEM ẢNH:** P5 cần endpoint `[Authorize]` đọc file theo `id` ảnh — tra `ten_file` từ DB, KHÔNG ghép tên
+   file từ request vào đường dẫn (path traversal).

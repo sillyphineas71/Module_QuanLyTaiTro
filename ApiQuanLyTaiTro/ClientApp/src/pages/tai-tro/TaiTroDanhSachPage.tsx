@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import clsx from "clsx";
 import TrangCongKhai from "../../layout/TrangCongKhai";
 import AppResultState from "../../layout/AppResultState";
+import MyButton from "../../components-ui/button";
 import { useAppDocumentTitle } from "../../hooks/useAppDocumentTitle";
 import {
     IChuongTrinhTomTat,
@@ -12,7 +13,8 @@ import {
     eTrangThaiChuongTrinh,
     phanTramDat,
 } from "../../model/ITaiTro";
-import { layDanhSachTomTat } from "./taiTroMock";
+// 🔄 P2b: nguồn là API thật. `./taiTroMock` KHÔNG còn được import — giữ file làm bộ 7 ca xấu để đối chiếu.
+import { layDanhSachChuongTrinh } from "../../services/taiTroApi";
 import { dinhDangNgay } from "../../utils/dinhDangNgay";
 import styles from "./TaiTroDanhSachPage.module.css";
 
@@ -95,7 +97,7 @@ const DongChuongTrinh: React.FC<{ ct: IChuongTrinhTomTat }> = ({ ct }) => {
                     <Link to={den}>{ct.ten}</Link>
                 </h3>
 
-                <p className={styles.moTa}>{ct.mo_ta_ngan}</p>
+                <p className={styles.moTa}>{ct.phu_de}</p>
 
                 <div className={styles.tienDo}>
                     <div className={styles.hangSo}>
@@ -145,21 +147,19 @@ const TaiTroDanhSachPage: React.FC = () => {
 
     const [danhSach, setDanhSach] = useState<IChuongTrinhTomTat[]>([]);
     const [trangThai, setTrangThai] = useState<TrangThaiTai>("dang-tai");
+    // Tăng lên = tải lại. Nút "Thử lại" chỉ đổi số này; effect bên dưới lo phần còn lại.
+    const [lanTai, setLanTai] = useState(0);
 
     useEffect(() => {
         let con = true;
-        // `await` từ BÂY GIỜ dù nguồn là dữ liệu cứng — xem `layDanhSachTomTat` trong
-        // taiTroMock.ts: đó là điều kiện để ngày đổi sang gọi mạng không phải sửa màn hình.
+        setTrangThai("dang-tai");
         void (async () => {
-            try {
-                const ds = await layDanhSachTomTat();
-                if (con) { setDanhSach(ds); setTrangThai("xong"); }
-            } catch {
-                if (con) setTrangThai("loi");
-            }
+            const kq = await layDanhSachChuongTrinh();
+            if (!con) return;
+            if (kq.loai === "xong") { setDanhSach(kq.data); setTrangThai("xong"); } else { setTrangThai("loi"); }
         })();
         return () => { con = false; };
-    }, []);
+    }, [lanTai]);
 
     const { dangDienRa, daDienRa } = useMemo(() => ({
         dangDienRa: danhSach.filter((x) => x.trang_thai === eTrangThaiChuongTrinh.DangDienRa),
@@ -171,11 +171,16 @@ const TaiTroDanhSachPage: React.FC = () => {
 
     const renderNoiDung = () => {
         if (trangThai === "dang-tai") {
-            return <p className={styles.dangTai}>Đang tải danh sách chương trình…</p>;
+            // Chữ, KHÔNG khung xương (lead chốt P2b). `role="status"` để trình đọc màn hình đọc câu này;
+            // `aria-busy` đặt ở vùng nội dung bao ngoài (xem return bên dưới).
+            return <p className={styles.dangTai} role="status">Đang tải danh sách chương trình…</p>;
         }
         if (trangThai === "loi") {
+            // 🔴 LỖI ≠ RỖNG: không biết có chương trình nào hay không. Trang công khai, người ta chủ động vào ⇒
+            // phải có đường thử lại ngay tại chỗ, không bắt họ tự nghĩ ra "tải lại trang".
             return <AppResultState variant="error" title="Không tải được danh sách chương trình"
-                description="Vui lòng tải lại trang. Nếu vẫn lỗi, liên hệ Khoa qua thông tin ở cuối trang." />;
+                description="Có thể do kết nối mạng hoặc máy chủ đang bận. Nếu thử lại vẫn lỗi, liên hệ Khoa qua thông tin ở cuối trang."
+                action={<MyButton text="Thử lại" variant="primary" onClick={() => setLanTai((n) => n + 1)} />} />;
         }
         // 🔴 TRẠNG THÁI 3 — chưa có chương trình nào. Đây là TRANG CÔNG KHAI: người ngoài chủ
         // động gõ địa chỉ vào, nên câu trả lời phải nói rõ "hệ thống chạy bình thường, hiện chưa
@@ -237,7 +242,9 @@ const TaiTroDanhSachPage: React.FC = () => {
                         được công khai số tiền đã nhận và toàn bộ nội dung đã chi, kèm minh chứng.
                     </p>
                 </header>
-                {renderNoiDung()}
+                <div aria-busy={trangThai === "dang-tai"}>
+                    {renderNoiDung()}
+                </div>
             </div>
         </TrangCongKhai>
     );

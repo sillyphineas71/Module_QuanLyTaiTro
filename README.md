@@ -20,9 +20,12 @@ Yêu cầu: .NET 8 SDK · Node 18+ · SQL Server.
 
 ⚠️ Lần đầu: chép `ApiQuanLyTaiTro/appsettings.Example.json` → `appsettings.json` rồi điền
 connection string + SMTP. File `appsettings.json` bị gitignore (chứa secret).
-⚠️ Connection string phải dùng **tài khoản SQL riêng** của cổng này — script tạo ở
-[`DB_Setup/01_CreateLogin_TaiTro.sql`](DB_Setup/01_CreateLogin_TaiTro.sql), lý do ở
+⚠️ Connection string phải dùng **tài khoản SQL riêng** của cổng này — tạo ở
+[`DB_Setup/00_TaoLogin_TaiTro.sql`](DB_Setup/00_TaoLogin_TaiTro.sql), cấp quyền ở
+[`DB_Setup/90_CapQuyen_TaiTro.sql`](DB_Setup/90_CapQuyen_TaiTro.sql), lý do ở
 [`docs/01-kien-truc.md`](docs/01-kien-truc.md).
+🔴 Chạy theo [`DB_Setup/TRIEN_KHAI_P1.md`](DB_Setup/TRIEN_KHAI_P1.md): `00_` đầu tiên, `90_` **sau** bảng/view/SP.
+Chạy `90_` trước là API lỗi "EXECUTE permission was denied" (file tự dừng bằng lỗi 50020 nếu thiếu đối tượng).
 
 ## Cổng chạy
 

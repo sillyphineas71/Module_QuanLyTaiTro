@@ -126,6 +126,19 @@ namespace ApiQuanLyTaiTro.Repositories.Base
             }
         }
 
+        // Thêm ở P2a (SP 02, SP 04 của cổng Tài trợ trả hai result set). Repo cũ chưa từng cần.
+        public async Task<T> SelectMultipleAsync<T>(string StoreProcedueName, DynamicParameters param, Func<SqlMapper.GridReader, Task<T>> docKetQua, string ConnectionName = "DefaultConnection")
+        {
+            using (var connection = GetConnection(ConnectionName))
+            {
+                connection.Open();
+                using (var grid = await SqlMapper.QueryMultipleAsync(connection, StoreProcedueName, param, commandType: CommandType.StoredProcedure))
+                {
+                    return await docKetQua(grid);
+                }
+            }
+        }
+
         public async Task<T> ExecuteInTransactionAsync<T>(Func<IDbConnection, IDbTransaction, Task<T>> action, string ConnectionName = "DefaultConnection")
         {
             // ĐỔI 2: bỏ ex.SaveLog() — chỉ throw

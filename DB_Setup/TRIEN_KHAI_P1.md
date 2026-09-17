@@ -37,8 +37,33 @@ Gặp lỗi đó:
 
 ## Thứ tự chạy
 
+```
+Bước 0 LOGIN (00_TaoLogin)  →  1 BẢNG  →  2 VIEW  →  3 SP  →  4 QUYỀN (90_CapQuyen)  →  5–6 kiểm (98_, 99_)
+```
+
+Tên file trong `DB_Setup/` **nói luôn thứ tự**: `00_` đầu tiên, `90_` sau mọi đối tượng, `98_`/`99_` kiểm.
+🔄 Trước 2026-09-17: login và quyền nằm chung trong `01_CreateLogin_TaiTro.sql`. Tên `01_` đọc như bước đầu
+⇒ lead chạy nó **trước khi có SP** ⇒ API lỗi `The EXECUTE permission was denied on the object
+'TT_CongKhai_…'` (log API 15:07:57). Đã tách làm hai file (docs/03 N20).
+⚠️ `90_CapQuyen` tự **dừng bằng lỗi 50020** nếu chưa đủ 8 bảng / 5 view / 5 SP, và **50022** nếu chưa có
+user — chạy nhầm thứ tự thì thấy ngay, không "thành công" giả.
+⚠️ Lô sau **thêm** bảng/view/SP `TT_*` ⇒ **chạy lại `90_CapQuyen`** ở cuối lô đó. `CREATE OR ALTER` giữ quyền
+của SP **đã có**, nhưng SP **mới** không có quyền nào cho tới khi file đó chạy lại.
+
 Mỗi dòng là **một lệnh độc lập** — dán được vào cả PowerShell lẫn cmd. Lệnh nào báo lỗi thì **dừng**,
 đừng chạy tiếp.
+
+### Bước 0 — Login + user `TT_APP_USER` (không cấp quyền nào)
+
+⚠️ Điền mật khẩu vào dòng `CREATE LOGIN` trước (đừng commit). Login đã có thì dòng đó bị bỏ qua.
+⚠️ Instance phải bật **SQL Server authentication** (Mixed Mode). File tự nối lại user mồ côi (user có sẵn
+nhưng không khớp SID với login — đã gặp ở P2a).
+
+```
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\00_TaoLogin_TaiTro.sql"
+```
+
+ĐÚNG khi dòng kiểm cuối: `trang_thai = noi dung`, `chi_windows_auth = 0`.
 
 ### Bước 1 — 8 bảng (kèm index của từng bảng)
 
@@ -78,37 +103,83 @@ sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "StoredPro
 sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "StoredProcedures\CuuSV\01. TT_CuuSV_GetLichSuTaiTroCuaToi.sql"
 ```
 
-### Bước 4 — Cấp quyền cho `TT_APP_USER`
+⚠️ **Ghi nhận (2026-09-17), không cần làm riêng:** bản `TT_CuuSV_GetLichSuTaiTroCuaToi` đang chạy trên `MSSQLSERVER01`
+lệch file **một chữ trong chú thích** ("quyền akhác nhau" — file là "khác"); thân SP khớp từng từ. Lần triển khai
+tới chạy lại dòng cuối ở trên là hết lệch. Không ảnh hưởng hành vi.
 
-Bước 5 của `01_CreateLogin_TaiTro.sql` tự cấp quyền cho **mọi bảng/SP `TT_*` đang có**, nên phải chạy
-lại **sau** bước 1–3. File an toàn khi chạy lại (login/user bọc `IF NOT EXISTS`).
+### Bước 4 — Cấp quyền cho `TT_APP_USER` — 🔴 SAU BƯỚC 1–3
+
+`90_CapQuyen_TaiTro.sql` tự cấp quyền cho **mọi bảng/SP `TT_*` đang có** (sinh bằng vòng lặp — không liệt kê
+tay), nên chỉ chạy **sau** bước 1–3. Chạy lại bao nhiêu lần cũng an toàn.
+Thấy `Msg 50020 … CHUA DU DOI TUONG` ⇒ bước 1–3 chưa xong. `Msg 50022` ⇒ chưa chạy Bước 0.
+`Msg 50021 … KHONG DO dbo SO HUU` ⇒ đọc mục 3b của file trước khi làm gì.
 
 ```
-sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\01_CreateLogin_TaiTro.sql"
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\90_CapQuyen_TaiTro.sql"
 ```
 
-⚠️ Nếu **chưa từng** chạy file này: điền mật khẩu vào dòng `CREATE LOGIN` trước (đừng commit).
-Nếu login đã có: dòng đó bị bỏ qua, placeholder không sao.
-⚠️ View **không** được cấp quyền, và không cần: SP do `dbo` sở hữu đọc view do `dbo` sở hữu qua
-ownership chaining — `EXECUTE` trên SP là đủ. Đừng thêm `GRANT SELECT` trên view.
-🔴 Bước 5b của file đó **DENY INSERT/UPDATE** trên `TT_MaDoiPhien` cho `TT_APP_USER`: cổng này đổi mã,
+🔴 **View `TT_v_*` KHÔNG được cấp quyền nào — cố ý.** SP (chủ `dbo`) đọc view (chủ `dbo`) qua **ownership
+chaining**: SQL Server chỉ kiểm `EXECUTE` ở SP. Đã chứng minh trên DB thật 2026-09-17: thu hết SELECT trên 5
+view trong transaction, `TT_APP_USER` vẫn gọi được 4 SP, rồi ROLLBACK. File còn **gỡ** quyền view mà bản cũ
+hoặc tay đã cấp.
+⚠️ **Khi nào PHẢI cấp:** view (hoặc thứ nó đọc) do chủ sở hữu **khác `dbo`** — chuỗi đứt, quyền view mới có
+tác dụng. File dừng bằng lỗi 50021 đúng ca này.
+🔄 Lịch sử: mục này từng ghi "Đừng thêm GRANT SELECT trên view" → ngày 2026-09-17 quyền đó bị thêm vào do chẩn
+đoán sai một lỗi triển khai (lỗi thật là EXECUTE denied) → gỡ lại cùng ngày. **Gặp lỗi quyền: đọc nguyên văn
+câu lỗi** — nó nêu tên đối tượng và loại quyền.
+🔴 Khối 4 của file đó **DENY INSERT/UPDATE** trên `TT_MaDoiPhien` cho `TT_APP_USER`: cổng này đổi mã,
 không bao giờ tạo mã. Đọc lý do ở chính file đó trước khi "sửa cho thông".
 
-### Bước 5 — Kiểm cấu trúc (chỉ đọc) — 🔴 ĐỌC KẾT QUẢ
+**Sửa `90_CapQuyen` ⇒ chạy thử trước** (file đó có SQL động — quét cú pháp không kiểm được, docs/02 C5):
+
+```
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\97_ChayThu_CapQuyen.sql"
+```
+
+ĐÚNG khi dòng cuối `PASS: …` + mã thoát 0. File chạy chính `90_` trong transaction, tự kiểm 8 ca, rồi ROLLBACK
+— quyền trên DB không đổi. Phải đứng ở thư mục gốc repo (`:r` dùng đường dẫn tương đối).
+🔴 **`96_` và `97_` dùng `:r` — chỉ chạy bằng sqlcmd từ thư mục gốc repo, hoặc SSMS ĐÃ BẬT Query → SQLCMD Mode.**
+🔄 Lead chạy `97_` ba lần (2026-09-17): SSMS thường · sqlcmd sai thư mục — **cả hai báo PASS mà chưa nạp được
+`90_`** (kiểm trên quyền cũ); lần ba từ gốc repo mới chạy thật. Nay hai file **tự chứng minh đã nạp**: `:r` không
+chạy ⇒ `97_` THROW **50031**, `96_` THROW **50095**, không in PASS (đã thử cả ba cách chạy sai — docs/03 N21).
+
+### Bước 5 — Kiểm cấu trúc (chỉ đọc) — TỰ BÁO SAI
+
+Hai lệnh, cả hai **tự THROW + mã thoát ≠ 0** khi sai — không cần đọc từng dòng output. Lệnh lỗi thì **DỪNG**.
+
+**5a — DDL bảng trên DB có khớp file không** (tên cột, kiểu, độ dài, nullable). Dựng 8 bảng từ file trong
+`tempdb` (transaction → ROLLBACK), so `INFORMATION_SCHEMA.COLUMNS` với DB. Đứng ở thư mục gốc repo (`:r`).
+
+```
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\96_SoDDL_Bang.sql"
+```
+
+ĐÚNG: `PASS: 8 bang / N cot tren DB khop file`. **Msg 50096** ⇒ bảng các cột lệch in ngay trên; bảng rỗng thì DROP
+rồi chạy lại file bảng, có dữ liệu thì viết script ALTER. **Msg 50095** ⇒ tiền đề hỏng, so sánh vô nghĩa.
+🔴 Chạy 5a mỗi khi **sửa file bảng** sau lần triển khai đầu — `IF NOT EXISTS` trong file bảng bỏ qua lặng lẽ.
+
+**5b — Cấu trúc lớp công khai + quyền.**
 
 ```
 sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\99_KiemTra_P1.sql"
 ```
 
-| Khối | ĐÚNG khi |
-|---|---|
-| KIỂM 1 | 8 dòng, `so_cot_audit = 5` mọi dòng; truy vấn `thieu_bang` ra 0 dòng |
-| KIỂM 2 | 0 dòng |
-| **KIỂM 3** | **0 dòng** ở hai truy vấn đầu; truy vấn thứ ba ra **đúng 4** SP |
-| KIỂM 4 | 0 dòng |
-| KIỂM 5 | 0 dòng ở cả hai truy vấn |
-| **KIỂM 6** | **0 dòng** ở truy vấn đầu; truy vấn sau ra ≥ 1 SP `TT_CuuSV_*` |
-| **KIỂM 7** | **0 dòng** ở truy vấn đầu; truy vấn sau ra **đúng 2 dòng DENY** (INSERT, UPDATE) |
+ĐÚNG: dòng cuối `PASS: 7/7 KIEM` + mã thoát 0. SAI: dừng ở KIỂM hỏng ĐẦU TIÊN, mã lỗi cho biết KIỂM nào; bảng
+dòng vi phạm in ngay trên dòng lỗi.
+
+| Mã | KIỂM hỏng | Nghĩa là |
+|---|---|---|
+| 50101 | 1 | thiếu bảng TT_ / bảng thiếu 5 trường audit |
+| 50102 | 2 | view/SP tạo thiếu `ANSI_NULLS`/`QUOTED_IDENTIFIER` ON (chạy lại file đó với `-I`), hoặc chưa đủ 10 view/SP |
+| **50103** | **3** | **SP công khai đọc thẳng bảng / view công khai chạm bảng riêng tư — KHÔNG nối API** |
+| 50104 | 4 | view công khai lộ cột riêng tư, hoặc thiếu view |
+| 50105 | 5 | có filtered index, hoặc cột cấm / cột đã gỡ (bảng tạo từ DDL cũ) |
+| 50106 | 6 | SP `TT_CuuSV_*` thiếu `@id_tai_khoan_csv`, hoặc chưa có SP |
+| **50107** | **7** | **`TT_APP_USER` tạo được mã đăng nhập, hoặc thiếu DENY — chạy lại `90_CapQuyen`** |
+
+🔄 Trước 2026-09-17: bảng trên là "ĐÚNG khi … 0 dòng" và trông vào người đọc output. KIỂM 7 khi đó có lỗi cú pháp,
+**chưa từng chạy**, mà vẫn được báo "ra 0 dòng" (docs/02 C5). Mỗi KIỂM nay còn kiểm **tiền đề** — truy vấn dò trên
+tập rỗng thì luôn ra 0 dòng.
 
 ### Bước 6 — Thử hành vi — 🔴 CHỈ TRÊN DB DEV / BẢN SAO
 
@@ -120,6 +191,25 @@ sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\
 ```
 
 ĐÚNG khi dòng cuối là `PASS: 19/19 ca …` và mã thoát 0.
+🔴 **Chạy bước này TRƯỚC khi nhập dữ liệu mẫu** — nó tiêu IDENTITY (id đầu tiên của `TT_ChuongTrinh` sau đó
+là 4, không phải 1).
+✅ `MSSQLSERVER01`: lead đã chạy 2026-09-17 — **PASS 19/19**, đã ROLLBACK. 🔄 Trước đó (cùng ngày) bước này được
+phát hiện **chưa từng chạy** (`last_value` IDENTITY mọi bảng TT_ là NULL) dù "PASS 19/19" đã được nêu — docs/03 N21.
+
+## Lô P3a — SP ghi lời khai tài trợ (thêm sau P1)
+
+Hai SP mới, rồi **chạy lại file quyền** (SP mới chưa có EXECUTE cho tới khi `90_` chạy lại — lỗi đã gặp ở P1):
+
+```
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "StoredProcedures\KhaiTaiTro\01. TT_NhaTaiTro_Tao.sql"
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "StoredProcedures\KhaiTaiTro\02. TT_AnhChuyenKhoan_Tao.sql"
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\90_CapQuyen_TaiTro.sql"
+sqlcmd -S <server> -E -d ESS_HOCVIENTAICHINH_DAOTAO -I -b -f 65001 -i "DB_Setup\97_ChayThu_CapQuyen.sql"
+```
+
+`97_` phải PASS (FAIL 1 = SP mới thiếu EXECUTE). `99_` KIỂM 3 không bị ảnh hưởng: hai SP này không mang tiền tố `TT_CongKhai_`.
+⚠️ Ảnh chuyển khoản lưu ở `<content root>/Assets/RiengTu/AnhChuyenKhoan/` — thư mục **không** phục vụ tĩnh. Tiến trình API
+cần quyền GHI thư mục đó, và thư mục **không** được nằm trong phần bị ghi đè khi deploy (docs/03 N26).
 
 ## Chưa có trong kịch bản này — thuộc lô đăng nhập
 

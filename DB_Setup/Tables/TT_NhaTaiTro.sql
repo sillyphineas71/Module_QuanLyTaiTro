@@ -101,7 +101,7 @@ BEGIN
         --
         -- NULL = không có dữ liệu: doanh nghiệp và tập thể lớp KHÔNG CÓ ngày sinh. DATE, không DATETIME.
         -- Ảnh chụp lúc khai như bốn cột định danh (điền sẵn từ STU_HoSoSinhVien.Ngay_sinh với cựu SV
-        -- đăng nhập — quyền SELECT cột đó GIỮ, xem DB_Setup/01_CreateLogin_TaiTro.sql).
+        -- đăng nhập — quyền SELECT cột đó GIỮ, xem DB_Setup/90_CapQuyen_TaiTro.sql).
         ngay_sinh           DATE              NULL,
 
         -- Liên hệ RIÊNG TƯ — chỉ quản trị thấy, KHÔNG view công khai nào có hai cột này.

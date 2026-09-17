@@ -36,21 +36,17 @@ namespace ApiQuanLyTaiTro.Middleware
                     var contextFeature = context.Features.Get<IExceptionHandlerPathFeature>();
                     if (contextFeature != null)
                     {
-                        try
-                        {
-                            Serilog.Log.Error(
-                                contextFeature.Error,
-                                "Lỗi hệ thống tại endpoint {Path}. User: {User}",
-                                contextFeature.Path.ToString(),
-                                userName);
-                        }
-                        catch { /* Silently ignore logging errors */ }
+                        // Chi tiết vào LOG (kèm endpoint + user), client chỉ nhận câu chung — luật ở ExceptionHelper.
+                        ExceptionHelper.GhiLogLoiHeThong(
+                            contextFeature.Error,
+                            $"endpoint {contextFeature.Path} (user: {userName})");
 
+                        // 🔄 Trước P2a: message = "Có lỗi: " + contextFeature.Error.Message — lộ chữ SQL ra ngoài.
                         var errorResponse = new Response
                         {
                             is_success = false,
                             code       = ResponseCode.SYSTEM_ERROR,
-                            message    = "Có lỗi: " + contextFeature.Error.Message
+                            message    = ExceptionHelper.THONG_BAO_LOI_CHUNG
                         };
 
                         await context.Response.WriteAsync(

@@ -8,7 +8,7 @@
       Nhìn tiền tố TT_ rồi tưởng cổng Tài trợ ghi vào đây là sai lầm nguy hiểm nhất có thể mắc với
       bảng này: ai tạo được mã thì ĐĂNG NHẬP ĐƯỢC THÀNH BẤT KỲ CỰU SV NÀO. Cổng Tài trợ là cổng công
       khai, bề mặt tấn công rộng hơn; quyền tạo mã phải nằm ở phía ĐÃ XÁC THỰC người dùng — cổng cựu SV.
-      ⇒ TT_APP_USER bị DENY INSERT/UPDATE trên bảng này (DB_Setup/01_CreateLogin_TaiTro.sql, bước 5).
+      ⇒ TT_APP_USER bị DENY INSERT/UPDATE trên bảng này (DB_Setup/90_CapQuyen_TaiTro.sql, khối 4).
       ⇒ Sửa cấu trúc bảng = sửa hợp đồng giữa HAI repo. Mở cả hai phía cùng lúc.
 
    LUỒNG (docs/01-kien-truc.md §2):
