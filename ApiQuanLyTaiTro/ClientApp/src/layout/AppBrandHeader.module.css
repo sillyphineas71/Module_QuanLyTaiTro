@@ -1,0 +1,550 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   HEADER DÙNG CHUNG — đóng nợ mục 51 ("hai header song sinh đã trôi khỏi nhau")
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Trước R2 có HAI bản chép: AppLayout.module.css và AlumniLandingPage.module.css, dùng CÙNG
+   bộ tên class nhưng 8/11 selector đã trôi khác nhau, kèm hai bản chép của cả hai khối @media.
+   Nay chỉ còn file này. Khác biệt giữa hai nơi dùng là PROP, không phải hai bản CSS.
+
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 LOGO PHẢI NẰM TRÊN NỀN TRẮNG — QUYẾT ĐỊNH ĐO ĐƯỢC, KHÔNG PHẢI SỞ THÍCH
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Đã giải mã điểm ảnh của logo_vnu_70nam.png (RGBA, 4096x2873) và đo tương phản thật ở BA loại
+   nền mà header từng/có thể dùng:
+
+                              nền #0050D0     nền TRẮNG     DẢI GRADIENT 56px
+                              (R1, đã bỏ)     (đang dùng)   (mẫu R8, ĐÃ BÁC)
+       dải 1 (đỉnh)              1.15            5.95            2.17
+       dải 2                     1.09            6.29            1.99
+       dải 3                     1.09            7.49            1.59
+       dải 4                     1.07            7.36            1.28
+       dải 5 (đáy)               1.27            8.72            1.13
+       ĐIỂM TỆ NHẤT              1.00            4.06            1.00
+       % điểm ảnh dưới 3:1        100%             0%             100%
+
+   Tức là KHÔNG PHẢI "nửa trên chìm" — TOÀN BỘ logo chìm trên mọi nền màu, và có điểm trùng đúng
+   độ sáng của nền (1.00). Lý do: logo đi gradient xanh->hồng, mà tương phản tính theo ĐỘ SÁNG
+   chứ không theo sắc màu; hồng #a5226f và xanh #0050D0 khác hẳn màu nhưng gần bằng độ sáng.
+   Dải gradient 56px còn TỆ HƠN cả nền xanh đặc và tệ hơn footer (1.57): dải mỏng nên logo đi qua
+   TRỌN vẹn thang xanh->đỏ, gặp cả vùng đỏ sáng nơi phần hồng của logo trùng khít.
+
+   => Chỉ nền TRẮNG mới đủ chỗ thở cho một logo gradient hai đầu.
+
+   ⚠️ ĐỪNG kéo dải màu chạy hết bề ngang tầng trên. Khi đó logo nằm NỬA trên dải màu, NỬA trên
+   nền trắng, và KHÔNG CÓ CÁCH XỬ NÀO:
+       · để màu gốc           -> nửa trên 1.00
+       · tô trắng bằng filter -> nửa dưới 1.00 (trắng trên trắng)
+   `filter` là thuộc tính của CẢ phần tử, không tô được nửa này mà chừa nửa kia. Mẹo `filter` của
+   footer (mục 71) KHÔNG áp được ở đây, và đó chính là lý do bố cục dưới đây tách CỘT chứ không
+   tách HÀNG.
+
+   ⚠️ Nếu buộc phải có nền màu sau lưng logo, thứ PHẢI làm trước là thay logo bằng bản một màu /
+   bản có nền trắng sẵn - xem nợ mục 66.
+
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   R8 — HAI TẦNG DỰNG BẰNG HAI CỘT, KHÔNG PHẢI HAI HÀNG
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+       +---------------+----------------------------------------------+
+       |               | (- topBar: gradient, bo góc DƯỚI-TRÁI        |  40px
+       |  brand (TRẮNG)+----------------------------------------------+
+       |  logo + tên   |   bottomBar: nền trắng, neo + nút Đăng nhập  |  56px
+       +---------------+----------------------------------------------+
+   `.brand` là CỘT TRÁI chạy hết chiều cao; `.tang` là CỘT PHẢI xếp dọc hai tầng. Vì thế:
+     · logo TRÀN qua ranh giới hai tầng theo đúng mẫu, mà vẫn nằm trọn trên nền trắng;
+     · mép trái bo góc của dải màu TỰ khớp mép phải khối logo - không phải canh tay bằng offset,
+       và KHÔNG cần z-index nào cả vì hai khối không chồng nhau.
+   Đổi sang "hai hàng + logo position:absolute" là tự chuốc lấy cả bài toán tương phản ở trên
+   lẫn bài toán canh tay. Đừng đổi.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+.header {
+    display: flex;
+    align-items: center;
+    min-height: 80px;
+    background-color: var(--surface-default);
+    /* R3: viền xám 1px -> VẠCH THƯƠNG HIỆU 2px --accent-crimson (7.56:1 trên trắng).
+       Ba lý do, không phải "cho có màu":
+       (a) crimson là MỘT NỬA bảng màu lấy từ logo (10,1% điểm ảnh) mà trước R3 chỉ dùng ở đúng
+           một chỗ - viền ô bảng đang chọn. Một màu thương hiệu bỏ không là chỗ rẻ nhất để lấy màu.
+       (b) Header nay TRẮNG (R2), nên nó không còn mang màu thương hiệu nào. Vạch này trả lại
+           màu cho vỏ ứng dụng mà không phải tô cả mảng 80px.
+       (c) Nó khép lại rủi ro E-1 của R2: header trắng đứng cạnh rail xanh thẫm trông rời nhau.
+       Vẫn là ĐƯỜNG PHÂN CÁCH, không phải trang trí thêm - nó thay cho viền xám cũ, không cộng thêm.
+       Không dùng bóng đổ: bóng tạo chiều sâu giả trong khi đây là hai mặt phẳng cùng cấp.
+       R8: vạch này GIỮ NGUYÊN ở cả hai chế độ - nó đóng đáy header, còn dải gradient của tầng
+       trên chỉ chiếm phần phải nên không thay được vai trò đó. */
+    border-bottom: 2px solid var(--accent-crimson);
+    /* 40px là NGOẠI LỆ ĐÃ DUYỆT của thang spacing - xem nợ mục 49. Giữ nguyên số. */
+    padding-right: 40px;
+    /* ═══════════════════════════════════════════════════════════════════════════════════════
+       STICKY (R12) — gỡ nợ mục 73
+       ═══════════════════════════════════════════════════════════════════════════════════════
+       DÍNH CẢ HEADER, không chỉ tầng dưới. Nợ 73 đã cảnh báo đúng: `position: sticky` đặt lên
+       `.bottomBar` MỘT MÌNH sẽ không chạy, vì nó là con của `.tang` (flex column) chứ không phải
+       con trực tiếp của phần tử cuộn - sticky neo theo tổ tiên CUỘN gần nhất, và `.tang` cao
+       đúng bằng nội dung nên không có quãng nào để trượt trong đó.
+       Muốn dính riêng tầng dưới thì phải tách tầng trên ra khỏi `.tang` và dựng lại cả bố cục
+       hai cột - tức phá đúng thứ đang giữ cho logo tràn hai tầng mà vẫn nằm trên nền trắng
+       (mục 72). Giá phải trả cho việc dính cả header chỉ là 16px cao hơn so với dính riêng tầng
+       dưới, ở ĐÚNG một màn (Landing + vai Cựu SV).
+
+       ⚠️ KHÔNG ảnh hưởng 9 màn trong: ở AppLayout, phần cuộn là `.content` nằm SÂU BÊN TRONG
+       `.body`, không phải tổ tiên của header. Sticky ở đó là vô hiệu, không phải là hỏng.
+       ⚠️ `scroll-margin-top: 112px` của ba đích neo ĐÃ khớp sẵn: header dính cao 96 + 2px vạch
+       crimson = 98px, còn thừa 14px thở. Đổi `min-height` của header thì phải kiểm lại số đó. */
+    position: sticky;
+    top: 0;
+    /* ═══════════════════════════════════════════════════════════════════════════════════════
+       🔴 z-index 100 — KHÔNG PHẢI SỐ TUỲ Ý. z-index: 2 (bản trước) KHÔNG ĐỦ.
+       ═══════════════════════════════════════════════════════════════════════════════════════
+       Bảng dùng chung DataTable dán hàng tiêu đề bằng `position: sticky; z-index: 2` (và 3 cho
+       cột ghim) — xem DataTable.module.css `.myTable thead tr th` / `.fixed_column_header`,
+       kèm inline `zIndex: column.fixed ? 3 : 2` ở Header.tsx, cộng một bản chép TOÀN CỤC trong
+       index.css. `.container` của bảng chỉ có `position: relative` + `overflow-x: auto` nên
+       KHÔNG mở stacking context ⇒ z-index của <th> tranh chấp THẲNG với header ở tầng gốc.
+       2 vs 2 ⇒ hoà, ai đứng SAU trong DOM thì đè — trang luôn đứng sau header ⇒ hàng tiêu đề
+       bảng vẽ ĐÈ header khi cuộn (thấy ở /tai-tro/:id). Cột ghim (3) thì đè thẳng.
+       Cùng hạng lỗi: skeleton `.load_line`/`.activity` của place-holder (z-index 44/45).
+
+       TRẦN mà header KHÔNG được vượt (grep toàn src/: mọi z-index đang tồn tại là
+       0,1,2,3,5,44,45,1000,1600):
+           · drawer điều hướng mobile  1000  (AppLayout `.drawerOverlay`) — PHẢI che header
+           · #__primerPortalRoot__     1600  (index.css) — Dialog/Overlay/ActionMenu, kể cả menu
+             ngôn ngữ + menu tài khoản CỦA CHÍNH header (ActionMenu ⇒ ra portal, nên nâng header
+             không kéo menu theo, và cũng không che nó)
+       100 nằm trên toàn bộ tầng nội dung (cao nhất 45) và dưới hai trần trên, chừa khoảng thở
+       cho cả hai phía. Sửa Ở ĐÂY, một lần cho MỌI trang — đừng hạ z-index từng bảng.
+       ═══════════════════════════════════════════════════════════════════════════════════════ */
+    z-index: 100;
+}
+
+.header p {
+    margin: 0;
+}
+
+/* ── Chế độ HAI TẦNG (chỉ Landing) ─────────────────────────────────────────────────────────
+   `align-items: stretch` là mấu chốt: nó cho cột `.tang` cao hết header, nhờ đó dải gradient
+   chạm mép trên và `.bottomBar` chạm vạch crimson - không còn khe trắng nào.
+   `padding-right: 0`: dải màu phải CHẠM mép phải màn hình như mẫu. Khoảng thở 40px chuyển vào
+   trong từng tầng (xem .topBar / .bottomBar) để nó nằm bên trong nền màu chứ không cắt nền. */
+.headerHaiTang {
+    align-items: stretch;
+    /* 40 (tầng trên) + 56 (tầng dưới). Chỉ Landing chịu con số này - xem khối "MÀN TRONG KHÔNG
+       ĐƯỢC CÓ TẦNG THỨ HAI" ở AppBrandHeader.tsx. */
+    min-height: 96px;
+    padding-right: 0;
+}
+
+/* Khối nhận diện: logo + hai dòng chữ. `flex: 1` để nó nuốt phần dư, `min-width: 0` để nó CO
+   được - đây là mảnh vá của lỗi "header cao 646px" (mục 48), KHÔNG được bỏ. */
+.brand {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding-left: var(--space-5);
+}
+
+/* 🔴 `flex: 0 1 auto` THAY CHO `flex: 1` - và đây là thứ định vị dải màu.
+   Ở chế độ một tầng, `.brand` phải NUỐT phần dư để đẩy `.actions` sang phải. Ở chế độ hai tầng
+   thì ngược lại: `.brand` phải CO VỀ ĐÚNG BỀ RỘNG NỘI DUNG, vì mép phải của nó CHÍNH LÀ nơi dải
+   gradient bắt đầu. Để `flex: 1` ở đây thì `.brand` và `.tang` chia đôi phần dư, dải màu bị đẩy
+   ra giữa màn hình và bố cục "bo góc trái ngay sau logo" biến mất.
+   `padding-right`: khoảng thở giữa chữ tên đơn vị và mép bo của dải. */
+.brandHaiTang {
+    flex: 0 1 auto;
+    padding-right: var(--space-5);
+}
+
+.logo {
+    display: flex;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+/* Khai theo CHIỀU CAO chứ không theo bề rộng như bản cũ: logo tỉ lệ 1.43:1, neo theo chiều cao
+   thì nó luôn vừa khít header bất kể sau này thay bằng file tỉ lệ khác. */
+.logo img {
+    height: 48px;
+    width: auto;
+    display: block;
+}
+
+/* 64px trong header 96px = 67% chiều cao, đúng tỉ lệ khối logo/header của mẫu.
+   Quan trọng hơn con số: 64 > 40 (chiều cao tầng trên) nên logo BẮT BUỘC tràn qua ranh giới hai
+   tầng - chi tiết của mẫu được thoả bằng hình học, không bằng offset canh tay.
+   Nó cũng đỡ được một phần nợ 66 (chữ trong logo khó đọc ở 48px). */
+.brandHaiTang .logo img {
+    height: 64px;
+}
+
+.nameProduct {
+    min-width: 0;
+    text-transform: uppercase;
+    /* Cho phép xuống dòng ở bề rộng trung gian; ở < 768px bị cấm hẳn (xem @media dưới) vì đó
+       chính là đường dẫn tới lỗi bẻ-theo-ký-tự của mục 48. */
+    overflow-wrap: break-word;
+}
+
+/* MỘT bộ rule cho CẢ HAI nội dung (tên đơn vị ở Landing · thương hiệu nhà cung cấp ở màn trong).
+   Dòng 1 lớn nhất và mang màu thương hiệu: --brand-700 trên nền trắng = 8.46:1 (thừa AA 4.5:1).
+   Xếp hạng này khớp footer: đơn vị vận hành cổng nổi hơn, cấp trên chìm hơn. */
+.nameProduct p:nth-child(1) {
+    color: var(--brand-700);
+    font-size: var(--text-xl);
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+/* Dòng 2 phụ thuộc dòng 1 nên NHỎ HƠN và CHÌM HƠN - phân cấp bằng cỡ chữ + màu phụ.
+   --fg-muted trên nền trắng = 5.25:1 (đạt AA). */
+.nameProduct p:nth-child(2) {
+    color: var(--fg-muted);
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+}
+
+/* ── Cột phải: hai tầng xếp dọc ────────────────────────────────────────────────────────────── */
+.tang {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 🔴 `to right` — CỐ Ý KHÁC footer (`to bottom`). ĐỪNG "dọn cho nhất quán".
+   Cùng hai màu, cùng thứ tự, chỉ khác TRỤC, vì hình dạng vật chứa khác hẳn:
+       footer  ~340px CAO  -> gradient dọc có chỗ trải, đọc ra một chuyển màu êm;
+       dải này   40px CAO  -> nén cả thang xanh->đỏ vào 40px dọc thành một VỆT GẤP.
+   Dải rộng ~600-900px nên trục ngang là trục duy nhất còn chỗ. Tương phản chữ trắng KHÔNG đổi
+   theo trục: vẫn 12.77 ở đầu #0A2F6E và 7.56 ở cuối #A3154F, cả 9 mốc đã đo đều trên AA. */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-4);
+    min-height: 40px;
+    /* 40px phải: cùng số với padding-right của header một tầng, nhưng nằm BÊN TRONG nền màu. */
+    padding: 0 40px 0 var(--space-5);
+    background: linear-gradient(to right, var(--brand-900), var(--accent-crimson));
+    color: var(--surface-default);
+    /* ⚠️ KHÔNG đặt `overflow: hidden` ở ĐÂY. Dải này chứa menu ngôn ngữ, mà menu thả xuống PHẢI
+       tràn ra ngoài dải mới thấy được. Rào chắn cuộn ngang đã chuyển xuống .topBarText - đúng
+       phần tử có thể tràn. */
+    /* Bo góc DƯỚI-TRÁI: mép trên của dải trùng mép trên header nên bo góc trên-trái sẽ khoét ra
+       một khe trắng hình tam giác ở đỉnh - trông như lỗi dựng, không như thiết kế. */
+    border-bottom-left-radius: var(--radius-lg);
+}
+
+/* Thương hiệu NHÀ CUNG CẤP. Trắng trên vùng cuối gradient (gần #A3154F) = 7.56:1.
+   Cỡ --text-sm chứ không --text-md: đây là dòng ghi công, nó KHÔNG được tranh chú ý với tên đơn
+   vị bên trái (--text-xl/800) hay với nút Đăng nhập ở tầng dưới. */
+.topBarText {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    /* 🔴 RÀO CHẮN THANH CUỘN NGANG, không phải dọn dẹp.
+       `.tang` khai `min-width: 0` nên nó CO ĐƯỢC XUỐNG DƯỚI cỡ nội dung. Thiếu ba dòng này, một
+       chuỗi nhà cung cấp dài hơn dự tính (hoặc font dự phòng rộng hơn Be Vietnam Pro) sẽ TRÀN RA
+       NGOÀI mép phải header và sinh thanh cuộn ngang cho CẢ TRANG - đúng lớp lỗi ở mục 58.
+       `min-width: 0` là phần bắt buộc: phần tử flex mặc định KHÔNG co dưới cỡ nội dung, nên
+       thiếu nó thì `text-overflow` không bao giờ có dịp chạy.
+       Cắt chữ kèm ba chấm là hỏng cục bộ và nhìn thấy ngay; cuộn ngang cả trang thì không. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tầng dưới = TẦNG HÀNH ĐỘNG (tầng trên là tầng DANH TÍNH). `flex: 1` để nó ăn hết phần chiều
+   cao còn lại, nhờ đó tổng hai tầng luôn khít header dù min-height có đổi. */
+.bottomBar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    /* Khoảng cách giữa THANH ĐIỀU HƯỚNG và nút/menu góc phải. Khoảng cách GIỮA CÁC MỤC trong
+       thanh là --space-5, khai riêng ở .nav - hai con số khác nhau có chủ đích: các mục là một
+       cụm, nút là một thứ khác loại. */
+    gap: var(--space-4);
+    min-height: 56px;
+    padding: 0 40px 0 var(--space-5);
+}
+
+/* ── Thanh điều hướng 4 mục (nằm trong .bottomBar) ─────────────────────────────────────────
+   🔴 `flex: 1` + `justify-content: center` — THIẾT KẾ CHO ÍT MỤC, đọc trước khi đổi.
+   Mẫu AOF có 8 mục nên chúng trải kín hàng một cách tự nhiên. Ta chỉ có 4, và bản R8 xếp chúng
+   sát trái (`margin-right: auto`) nên ở 1920px chúng dồn cục rồi để lại ~900px trống tới nút
+   Đăng nhập - đọc ra "thanh bị hụt", không ra "thanh thoáng".
+
+   ĐÃ CÂN NHẮC VÀ BÁC — `justify-content: space-between` cho cả hàng: ở 1920px khoảng cách GIỮA
+   các mục sẽ lên ~300px, tức bốn mục thôi đọc ra là MỘT NHÓM. Một thanh điều hướng phải đọc ra
+   là một cụm; giãn đều là phá đúng thứ đó.
+
+   ĐANG DÙNG — thanh chiếm hết chỗ trống rồi CĂN GIỮA nội dung của chính nó:
+     · khoảng trống được chia đều hai bên thay vì dồn hết về một phía ⇒ đọc ra "khoảng thở";
+     · nút Đăng nhập / menu tài khoản là MỘT PHẦN TỬ FLEX RIÊNG nên KHÔNG BAO GIỜ đè lên thanh,
+       dù bề rộng nào - khác hẳn cách căn giữa bằng `position: absolute`, vốn sẽ chồng lên nút
+       ở bề rộng hẹp.
+   Ẩn hẳn ở < 1024px: dưới mốc đó .brand đã phải hạ cỡ chữ và tầng trên cũng đã tắt, nên tầng
+   dưới quay về đúng hình dạng header một tầng. Các khu vực nó trỏ tới vẫn cuộn tay được. */
+.nav {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+}
+
+/* Cỡ --text-lg/700 chứ không --text-md/600 như R8: đây là điều hướng CHÍNH của cổng, nó phải
+   nặng hơn dòng ghi công ở tầng trên (--text-sm) và ngang hàng với nút Đăng nhập. Bốn mục nhỏ
+   li ti giữa một hàng rộng là nguyên nhân thứ hai của cảm giác "thanh bị hụt".
+   --brand-700 trên nền trắng = 8.46:1. Nền hover --brand-050 = 7.68:1, đủ thấy mà không thành
+   một khối màu nặng. */
+.navLink {
+    padding: var(--space-2) var(--space-4);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--brand-700);
+    font-family: inherit;
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: 1.5;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.navLink:hover {
+    background-color: var(--brand-050);
+}
+
+.navLink:focus-visible {
+    outline: 2px solid var(--brand-600);
+    outline-offset: 1px;
+}
+
+/* R13: bịt lỗ phản hồi khi BẤM. R3 đã làm :active cho nút nhưng bỏ sót mục điều hướng - bấm một
+   mục mà không có gì đổi thì trong quãng chờ trang cuộn, người dùng không biết máy đã nhận lệnh.
+   Nền đậm hơn một bậc so với :hover, KHÔNG dùng transform: mục điều hướng là chữ trong một hàng,
+   nhích nó xuống sẽ làm cả hàng trông rung. */
+.navLink:active {
+    background-color: var(--brand-050);
+    color: var(--brand-900);
+}
+
+/* MỤC ĐANG XEM - vạch đi theo vị trí cuộn (useMucDangXem), không gắn cứng vào "Trang chủ" như R9.
+   Phân biệt bằng HAI tín hiệu, không chỉ màu: chữ đậm màu trung tính (--fg-default trên trắng =
+   15.80:1) + vạch crimson dưới chân, cùng ngôn ngữ với vạch đáy header. Chỉ đổi màu thôi thì
+   người mù màu không thấy khác biệt.
+   Vạch là box-shadow nên nó nằm trong transition của .navLink: chuyển mục thì vạch mờ đi ở mục
+   cũ và hiện lên ở mục mới trong --transition-fast, không nhảy cụt. */
+.navLinkHienTai {
+    color: var(--fg-default);
+    box-shadow: inset 0 -2px 0 0 var(--accent-crimson);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.navLinkHienTai:hover {
+    background-color: var(--surface-subtle);
+}
+
+/* 🔄 `.navChuaCo` + `.chipSapCo` (mục "Tin tức" mờ + chip "Sắp có" của R9) ĐÃ GỠ cùng nợ 75.1:
+   khối tin tức có thật từ N2 nên mục này thành neo như hai mục kia. Cách dựng vỏ trung thực ghi
+   ở A3.30; HeaderLanguageMenu.module.css vẫn có một chip cùng loại đang chạy. */
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    /* Co được thay vì ép cả hàng tràn khi email dài. */
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────────────────────
+   768px - 1023px: hạ bậc cỡ chữ dòng 1 (khối @media của nó nằm CUỐI cụm này)
+   ───────────────────────────────────────────────────────────────────────────────────────────
+   🔴 KHỐI @media(1023.98px) KHÔNG PHẢI THỨ ĐÃ BỊ XOÁ Ở R2. Bản cũ có MỘT khối làm HAI việc:
+   (a) ẩn .headerLeft và (b) hạ cỡ chữ. R2 xoá hẳn .headerLeft nên việc (a) biến mất, nhưng
+   việc (b) VẪN CẦN - tính lại ngân sách với .headerLeft đã bỏ:
+
+       .headerRight <= 344px  (userInfo 260 + gap 8 + caret 16 + padding nút 20 + padding-right 40)
+       .brand       = phần còn lại
+       @768px : 768 - 344 = 424px cho .brand; trừ logo 69 + gap 16 + padding-left 24 = 109
+                => 315px cho chữ.
+
+   DÙNG `.nameProduct` CHỨ KHÔNG PHẢI `.nameProduct p`: cả hai rule cỡ chữ phải CÙNG độ đặc hiệu
+   (0,1,0) để thứ tự nguồn quyết định. `.nameProduct p` là (0,1,1) và sẽ THẮNG rule của khối
+   < 768px bên dưới (vì < 768px cũng khớp max-width: 1023.98px) -> hỏng đúng nhánh mobile từng
+   gây lỗi header cao 646px. */
+
+/* ───────────────────────────────────────────────────────────────────────────────────────────
+   🔴 < 1366px: HAI TẦNG XẸP VỀ MỘT — MỐC NÀY LÀ 1366. ĐỪNG HẠ XUỐNG.
+   ───────────────────────────────────────────────────────────────────────────────────────────
+   Lịch sử mốc: R8 = 1024 (hai mục chữ nhỏ) -> R9 = 1280 (bốn mục 16px/700) -> T1 = 1366 (mục
+   thứ NĂM "Vận động tài trợ"). Mỗi lần thêm mục là một lần mốc phải lên.
+
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   🔴 LUẬT BẮT BUỘC: ĐO THEO CA `actions` RỘNG NHẤT, KHÔNG PHẢI CA ĐANG NHÌN THẤY LÚC ĐO
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   `.bottomBar` = [.brand] [.nav] [actions], mà `actions` KHÔNG cùng bề rộng ở mọi nơi dùng:
+       · Landing / trang công khai   : một NÚT ("Đăng nhập" / "Vào hệ thống")      ~110px
+       · Màn trong (đã đăng nhập)    : NÚT TÀI KHOẢN — ba biến thể:
+             có email  (>= 1600px)   : .userInfo 260 + gap 8 + caret 16 + padding 24  ~308px
+             bỏ email  (< 1600px)    : vai trò 78  + gap 8 + caret 16 + padding 16    ~118px
+             bỏ cả vai trò (< 375px) : caret 16 + padding 12                           ~28px
+
+   🔴 BẢNG CỦA R9 CHỈ TÍNH CON SỐ 110px ⇒ NÓ CHƯA BAO GIỜ MÔ TẢ CA ĐÃ ĐĂNG NHẬP.
+   Hệ quả: ca B đã TRÀN TỪ TRƯỚC module tài trợ — với BỐN mục, B cần 1330px, tức đã vượt mốc
+   1280 cũ đúng 50px, suốt từ R9 tới nay mà không ai đo ra.
+   ⚠️ NGƯỜI ĐỌC SAU: đừng quy lỗi cho T1/module tài trợ. T1 chỉ làm dải hỏng rộng thêm, và là lô
+      ĐẦU TIÊN đo ra ca B. Việc sửa (bỏ email dưới 1600px) cũng làm ở lô đó.
+
+   Chuỗi thật, với thanh NĂM mục:
+       .brand      = 24 + logo 91 + gap 16 + tên đơn vị ~300 + 24        ~ 455px
+       .bottomBar padding (24 trái + 40 phải)                              64px
+       thanh 5 mục = 111 + 120 + 94 + 173 + 94 + 4 gap x 24              ~ 688px
+         ("Vận động tài trợ" = 16 ký tự x ~8.8px + padding 32 = 173px)
+       gap giữa thanh và actions                                           16px
+       ────────────────────────────────────────────────────────────────────────
+       cố định (không đổi theo ca)                                       ~ 1223px
+       A. KHÁCH        + actions 110  ->  TỔNG CẦN                       ~ 1333px
+       B. ĐÃ ĐĂNG NHẬP + actions 308  ->  TỔNG CẦN                       ~ 1531px  (>= 1600px)
+       B'. ĐÃ ĐĂNG NHẬP + actions 118 ->  TỔNG CẦN                       ~ 1341px  (< 1600px)
+
+       bề rộng | ca A            | ca B / B'                    | thanh mục
+       ────────┼─────────────────┼──────────────────────────────┼──────────
+       @1920   | dư 587px    ✅  | B  dư 389px              ✅  | hiện
+       @1600   | dư 267px    ✅  | B  dư  69px              ✅  | hiện   <- mốc đổi biến thể
+       @1536   | dư 203px    ✅  | B' dư 195px             ✅  | hiện
+       @1440   | dư 107px    ✅  | B' dư  99px             ✅  | hiện
+       @1366   | dư  33px    ✅  | B' dư  25px             ✅  | hiện   <- mốc gộp tầng
+       @1280   | (không xét)     | (không xét)                  | ẨN, header một tầng
+
+   ⇒ HAI mốc phối hợp với nhau, phải đọc cùng lúc:
+       1600px  (AppLayout.module.css) : nút tài khoản bỏ email  -> kéo B từ 1531 về 1341
+       1366px  (file này, ngay dưới)     : gộp hai tầng, ẩn thanh mục
+     Đổi một trong hai mà không tính lại cái kia là mở lại đúng lỗ hổng của bảng R9.
+
+   🔴 NGÂN SÁCH CÒN LẠI CHO MỤC THỨ SÁU, ở mốc 1366: **33px** (ca A). Một nhãn ngắn nhất cũng
+   tốn ~94px + gap 24 = 118px ⇒ **KHÔNG CÒN CHỖ**. Thêm mục thứ sáu BẮT BUỘC phải nâng mốc lần
+   nữa (1366 -> ~1490 cho ca A), hoặc đổi hẳn sang thanh có nút "thêm" khi tràn.
+   ⚠️ Đừng thêm mục rồi mới tính. Tính trước, ở đúng bảng này.
+
+   Vì sao KHÔNG cứu được bằng cách thu nhỏ: thứ chiếm chỗ lớn nhất là KHỐI NHẬN DIỆN 455px, mà
+   nó không co thêm được nếu tên đơn vị vẫn phải đọc được (đã thử ở R9: hạ mục về 14px + gap 12
+   vẫn thiếu). Dưới mốc, header quay về hình dạng một tầng 80px và mọi trang vẫn tới được qua
+   Landing và footer. */
+@media (max-width: 1365.98px) {
+    .topBar {
+        display: none;
+    }
+
+    .headerHaiTang {
+        min-height: 80px;
+    }
+
+    /* Trả logo về 48px: không còn tầng trên để tràn qua, mà 64px trong header 80px thì lấn hết
+       khoảng thở trên dưới. Selector phải ĐÚNG BẰNG selector đã đặt 64px (0,3,0) - dùng
+       `.logo img` (0,1,1) ở đây sẽ THUA và logo kẹt ở 64px. */
+    .brandHaiTang .logo img {
+        height: 48px;
+    }
+
+    .nav {
+        display: none;
+    }
+}
+
+@media (max-width: 1023.98px) {
+    .nameProduct p:nth-child(1) {
+        font-size: var(--text-lg);
+    }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────────────────────
+   < 768px - MỘT HÀNG, CẤM BẺ TRONG TỪ
+   ───────────────────────────────────────────────────────────────────────────────────────────
+   TRIỆU CHỨNG ĐÃ ĐO (trước khi vá, ở 320/375/390/430): header cao tới 646px, ô chứa tên sản phẩm
+   rộng 0px, hai dòng tiêu đề chiếm 15 và 23 dòng chữ - tức bẻ dòng theo TỪNG KÝ TỰ. Ở trạng thái
+   đó nút hamburger và nút tài khoản bị đẩy ra ngoài tầm bấm.
+   NGUYÊN NHÂN: .brand co được tới 0 (min-width:0), .actions thì không có trần co, nên ô tiêu đề
+   bị ép còn vài px trong khi `overflow-wrap: break-word` cho phép bẻ NGAY TRONG TỪ.
+   BA VIỆC, chỉ ở < 768px: một hàng không wrap · cấm bẻ trong từ, thừa thì cắt ba chấm · khối tài
+   khoản thôi co giãn và bỏ hiện email (email đầy đủ vẫn nằm trong menu tài khoản). */
+@media (max-width: 767.98px) {
+    .header {
+        flex-wrap: nowrap;
+        min-height: 56px;
+        column-gap: var(--space-2);
+        padding-right: var(--space-2);
+    }
+
+    /* .headerHaiTang được khai TRƯỚC .header trong nguồn, cùng độ đặc hiệu (0,1,0), nên
+       min-height:56px ở trên đã thắng. Chỉ còn padding-right phải trả lại vì .headerHaiTang
+       đặt 0 để dải màu chạm mép - mà ở đây dải màu đã tắt. */
+    .headerHaiTang {
+        padding-right: var(--space-2);
+    }
+
+    .brand {
+        gap: var(--space-2);
+        padding-left: var(--space-2);
+    }
+
+    .brandHaiTang {
+        padding-right: 0;
+    }
+
+    .logo img {
+        height: 32px;
+    }
+
+    /* Lại là chuyện độ đặc hiệu: (0,3,0) phải bị ghi đè bằng đúng (0,3,0). */
+    .brandHaiTang .logo img {
+        height: 32px;
+    }
+
+    .bottomBar {
+        padding: 0 var(--space-2);
+        min-height: 56px;
+    }
+
+    .nameProduct {
+        overflow: hidden;
+        overflow-wrap: normal;
+        word-break: normal;
+    }
+
+    .nameProduct p {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .nameProduct p:nth-child(1) {
+        font-size: var(--text-sm);
+        line-height: 18px;
+    }
+
+    /* Giữ logo + MỘT dòng chữ. Dòng thứ hai ở bề rộng này luôn phải cắt bớt, mà nó vẫn hiện
+       nguyên vẹn ở footer (Landing) và ở `alt` của logo (màn trong). Hai dòng cắt cụt xấu hơn
+       một dòng đọc trọn. */
+    .nameProduct p:nth-child(2) {
+        display: none;
+    }
+
+    .actions {
+        gap: var(--space-2);
+    }
+}

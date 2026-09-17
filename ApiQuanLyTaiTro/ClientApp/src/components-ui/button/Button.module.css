@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   PHẢN HỒI THAO TÁC — thêm ở R3
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Trước R3, toàn bộ `src/` có ĐÚNG 0 khai báo `:active`. Nghĩa là bấm một nút không có phản hồi
+   tức thì nào - người dùng chỉ biết mình đã bấm khi trạng thái tải xuất hiện. Trên máy chậm hoặc
+   mạng chậm, đó là lúc người ta bấm lần thứ hai.
+
+   🔴 ĐÂY KHÔNG PHẢI TRANG TRÍ. Nó trả lời "hệ thống có nhận thao tác của tôi không?", nên nó
+   phải có ở MỌI NƠI - kể cả nút trong một dòng bảng. Ranh giới "vùng phải yên" (bảng, biểu mẫu)
+   áp cho MÀU MÈ và CHUYỂN ĐỘNG TỰ THÂN, không áp cho phản hồi trực tiếp khi người dùng bấm.
+
+   VÌ SAO `translateY(0)` rồi mới `scale`: nút chính ở trạng thái :hover có thể được nâng lên
+   (lô sau); khai lại translateY(0) ở :active để nó HẠ XUỐNG đúng vị trí gốc trước khi thu nhỏ,
+   nếu không hai transform sẽ cộng dồn và nút nhảy.
+
+   🔴 VỀ prefers-reduced-motion — ĐOẠN NÀY ĐÃ ĐỔI Ở R14. Trước đây rào chắn ở index.css rút
+   transition-duration về .01ms nên nút đổi trạng thái tức thì với người bật giảm chuyển động.
+   RÀO CHẮN ĐÓ NAY ĐÃ BỎ (chỉ thị lead - xem mục 86), nên nút chuyển tiếp bình thường với mọi
+   người. Riêng phép thu 2% ở đây thì vốn KHÔNG thuộc loại chuyển động mà WCAG 2.3.3 nhắm tới
+   (chuyển động diện rộng, thị sai, tự chạy) - nó là phản hồi trực tiếp khi NGƯỜI DÙNG TỰ BẤM,
+   nên nó không phải phần gây lo ngại trong quyết định đó.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Áp cho MỌI biến thể: Button.tsx gắn className={styles[variant ?? "default"]}, nên mỗi nút chỉ
+   nhận ĐÚNG MỘT trong các lớp dưới. Khai chung bằng danh sách selector thay vì lặp bốn lần. */
+.default,
+.primary,
+.danger,
+.invisible {
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+                background-color var(--transition-fast);
+}
+
+.default:active:not(:disabled),
+.primary:active:not(:disabled),
+.danger:active:not(:disabled),
+.invisible:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    box-shadow: none;
+}
+
+/* `!important` ở hai rule dưới là DI SẢN, không phải lựa chọn của R3: Primer đặt màu nền nút qua
+   styled-components với độ đặc hiệu cao hơn class thường. Giữ nguyên.
+   (Từ R1, theme Primer trong App.tsx cũng đã trỏ btn.primary về var(--primary), nên hai nguồn
+   nay cùng một màu - xem khối chú thích ở App.tsx.) */
+.primary {
+    background-color: var(--primary) !important;
+}
+
+.primary:hover {
+    opacity: 0.9 !important;
+    background-color: var(--primary) !important;
+}

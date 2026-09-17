@@ -1,0 +1,473 @@
+/* Font "Be Vietnam Pro" nạp bằng <link> trong public/index.html (preconnect + stylesheet),
+   KHÔNG dùng @import: @import tạo chuỗi request nối tiếp (CSS tải xong mới biết phải tải font)
+   nên chặn render lâu hơn. Font stack đặt ở body bên dưới để phủ CẢ component Primer, kể cả
+   thứ render qua portal (Dialog, ActionMenu) vốn nằm ngoài cây <BaseStyles>. */
+
+:root {
+  --background-default: rgba(208, 215, 222, 0.24);
+  /* R2: --bg_header / --bg_header_left ĐÃ XOÁ. Chúng chỉ phục vụ layout/Header.module.css của
+     hệ học vụ (đã xoá ở lô dọn D1) và hai ảnh banner của header cũ (đã xoá ở R2). */
+
+
+  /* = --brand-600. Xem khối "Thương hiệu" bên dưới - ĐỔI ở đây thì phải đổi cả ở đó. */
+  --primary: #0050D0;
+
+  /* Cổng Cựu SV - token bổ sung (KHÔNG sửa/xóa token cũ nào ở trên) */
+  /* Màu NHẤN trên nền SÁNG. 7.56:1 trên trắng · 7.10:1 trên --surface-subtle.
+     ĐỔI TÊN từ --accent-orange (cũ #B8330C): giá trị mới là ĐỎ THẪM lấy từ logo, giữ tên
+     "orange" là một cái tên NÓI DỐI - đúng loại lỗi đã gặp ở CSV_ThongKe_GetDanhMucKhoaHoc
+     (tên nói "khoá học", dữ liệu trả "niên khoá"). Tên sai không gây lỗi biên dịch nào, nó chỉ
+     làm người sau chọn nhầm màu. */
+  --accent-crimson: #A3154F;
+  /* ═══════════════════════════════════════════════════════════════════════════════════════
+     BỘ CHUYỂN ĐỘNG — BA MỨC, MỖI MỨC MỘT VIỆC (R13)
+     ═══════════════════════════════════════════════════════════════════════════════════════
+     Token ở đây là GHÉP SẴN thời lượng + đường cong, không tách thành hai họ token. Tách ra
+     thì mỗi chỗ dùng lại tự chọn một tổ hợp, và "nhất quán" biến mất đúng theo cách nợ 51 đã
+     xảy ra với header.
+
+       --transition-fast  120ms  ĐỔI MÀU TẠI CHỖ - chữ, nền, viền.
+                                 Dùng cho :hover/:active của liên kết, nút, mục điều hướng.
+       --transition-base  200ms  ĐỔI HÌNH KHỐI - nâng/hạ thẻ, đổ bóng.
+       --transition-slow  520ms  XUẤT HIỆN khi cuộn tới. CHỈ Landing.
+
+     🔴 VÌ SAO CHỈ MỨC `slow` ĐỔI ĐƯỜNG CONG:
+     `ease` mặc định (0.25,0.1,0.25,1) khởi động CHẬM. Ở 120-200ms không ai nhận ra, nhưng ở
+     520ms thì nó thành ra ì. `cubic-bezier(0.22,0.61,0.36,1)` là đường cong "đi vào" chuẩn:
+     bật nhanh ngay từ đầu rồi hãm dần - thứ đang tiến vào chỗ của nó phải giảm tốc, không phải
+     tăng tốc.
+     ⚠️ CỐ Ý KHÔNG đổi đường cong của `fast`/`base`: hai token đó dùng ở HÀNG CHỤC nơi ngoài
+     Landing (bảng, biểu mẫu, ngăn kéo lọc), mà lô này chỉ được đụng Landing. Đổi chúng là sửa
+     mù cả những màn không kiểm được trong lô này. */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --fg-default: #1F2328;
+  --fg-muted: #656d76;
+  --fg-subtle: #6e7781;
+
+  --border-default: #d0d7de;
+  --border-muted: hsla(210, 18%, 87%, 1);
+  --border-subtle: rgba(31, 35, 40, 0.15);
+
+  --shadow-small: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow-medium: 0 3px 6px rgba(140, 149, 159, 0.15);
+  --shadow-large: 0 8px 24px rgba(140, 149, 159, 0.2);
+  --shadow-extra-large: 0 12px 28px rgba(140, 149, 159, 0.3);
+
+  --neutral-emphasis-plus: #24292f;
+  --neutral-emphasis: #6e7781;
+  --neutral-muted: rgba(175, 184, 193, 0.2);
+  --neutral-subtle: rgba(234, 238, 242, 0.5);
+  --accent-fg: #0969da;
+  --accent-emphasis: #0969da;
+  --accent-muted: rgba(84, 174, 255, 0.4);
+  --accent-subtle: #ddf4ff;
+  --success-fg: #1a7f37;
+  --success-emphasis: #1f883d;
+  --success-muted: rgba(74, 194, 107, 0.4);
+  --success-subtle: #dafbe1;
+  --attention-fg: #9a6700;
+  --attention-emphasis: #9a6700;
+  --attention-muted: rgba(212, 167, 44, 0.4);
+  --attention-subtle: #fff8c5;
+  --severe-fg: #bc4c00;
+  --severe-emphasis: #bc4c00;
+  --severe-muted: rgba(251, 143, 68, 0.4);
+  --severe-subtle: #fff1e5;
+  --danger-fg: #d1242f;
+  --danger-emphasis: #cf222e;
+  --danger-muted: rgba(255, 129, 130, 0.4);
+  --danger-subtle: #ffebe9;
+  --open-fg: #1a7f37;
+  --open-emphasis: #1f883d;
+  --open-muted: rgba(74, 194, 107, 0.4);
+  --open-subtle: #dafbe1;
+  --closed-fg: #d1242f;
+  --closed-emphasis: #cf222e;
+  --closed-muted: rgba(255, 129, 130, 0.4);
+  --closed-subtle: #ffebe9;
+  --done-fg: #8250df;
+  --done-emphasis: #8250df;
+  --done-muted: rgba(194, 151, 255, 0.4);
+  --done-subtle: #fbefff;
+
+  --button-primary-fgColor-rest: #ffffff;
+
+  /* ==== Hệ token thiết kế cổng Cựu SV (lô 1) ====
+     Chỉ KHAI BÁO token ở lô này; việc thay các giá trị hardcode trong CSS module
+     sang var() thuộc lô sau. Không đổi tên token cũ đang được dùng. */
+
+  /* Bề mặt — thang xám trung tính, KHÔNG gradient */
+  /* Nền NGOÀI vùng làm việc - ngả nhẹ về xanh thương hiệu thay vì xám trung tính. Không
+     ảnh hưởng tương phản chữ nào: mọi nội dung ngồi trên --surface-default trắng.
+     (Kiểm cho chắc: --fg-default trên nền này = 14.48:1.) */
+  /* ═══════════════════════════════════════════════════════════════════════════════════════
+     THANG BỀ MẶT — BỐN BẬC, MỖI BẬC MỘT VAI. Chốt ở R3, đọc trước khi đổi bất kỳ nền nào.
+     ═══════════════════════════════════════════════════════════════════════════════════════
+       --surface-page     NỀN của vùng làm việc (.content). Mọi thứ khác NỔI trên nó.
+       --surface-default  MẶT LÀM VIỆC: thẻ, bảng, biểu mẫu, header. Trắng + --shadow-small.
+       --surface-subtle   CHÌM MỘT BẬC, dùng BÊN TRONG một mặt trắng (thead, chip, hover).
+       --surface-inset    CHÌM HAI BẬC: khối chỉ-đọc, ô kéo-thả — thứ trông như lõm xuống.
+
+     🔴 --surface-subtle KHÔNG ĐƯỢC dùng làm nền của .content: nó chỉ hơn --surface-page 1.02
+     lần độ sáng (mắt không phân biệt được), mà 19 khối đang dùng nó làm "chìm" - đặt chúng
+     lên một nền cùng màu là XOÁ SẠCH ý nghĩa chìm/nổi ở cả 19 chỗ cùng lúc.
+
+     ⚠️ --fg-subtle #6e7781 trên --surface-page chỉ đạt 4.17:1 (TRƯỢT AA 4.5). Nó chỉ an toàn
+     trên nền TRẮNG (4.55). Hiện cả 4 nơi dùng --fg-subtle đều nằm trong thẻ trắng - GIỮ NGUYÊN
+     như vậy, đừng đặt chữ --fg-subtle thẳng lên .content.
+     ═══════════════════════════════════════════════════════════════════════════════════════ */
+  --surface-page:    #F3F5FA;
+  --surface-default: #FFFFFF;
+  --surface-subtle:  #F6F8FA;
+  /* 🔴 #EFF2F5 -> #EBEFF5. ĐÃ CHẠM TRẦN, ĐỪNG ĐẨY TỐI HƠN.
+     Bản #EFF2F5 chỉ chênh --surface-page 1.03 lần - mắt không phân biệt được, đúng lời phê
+     "khối chỉ-đọc trông y như nền trang". Nhưng dải dùng được cho bậc CHÌM chỉ dày 0.062 đơn vị
+     sáng, vì ngay dưới là ngưỡng chữ: --fg-muted #656d76 tụt xuống 4.5:1 ở L = 0.8507.
+       #EFF2F5  L 0.8845  ·  chênh nền trang 1.030  ·  --fg-muted 4.67:1
+       #EBEFF5  L 0.8599  ·  chênh nền trang 1.058  ·  --fg-muted 4.55:1   <- ĐANG DÙNG
+       #EAEEF4  L 0.8518  ·  chênh nền trang 1.068  ·  --fg-muted 4.51:1   <- sát ngưỡng, loại
+     Muốn khối chìm tách mạnh hơn nữa thì KHÔNG phải bằng màu nền - dùng viền rõ hơn và bóng đổ
+     vào trong, như .readOnlyBlock của ProfilePage đang làm. */
+  --surface-inset:   #EBEFF5;
+
+  /* ==== THƯƠNG HIỆU — KHOA TOÁN - CƠ - TIN HỌC, ĐHQGHN ====
+     MỘT xanh duy nhất, năm bậc. Hai màu gốc LẤY TỪ ĐIỂM ẢNH của logo (không tự nghĩ ra):
+     xanh #0050D0 (cụm #0048B8-#0060F0) và đỏ thẫm #B81860 -> tinh chỉnh thành --accent-crimson.
+     --primary giữ nguyên vai trò, chính là bậc 600.
+
+     Tương phản đã tính lại bằng công thức WCAG 2.1 (không xấp xỉ), chữ TRẮNG trên nền:
+       900 = 12.77:1   ·   700 = 8.46:1   ·   600 = 6.87:1
+     Hai bậc sáng dùng làm NỀN, chữ --fg-default trên nó:
+       050 = 14.33:1   (an toàn cả với --fg-muted: 4.76)
+     (Bậc 100 đã bị xoá ở R3 - xem lý do ngay dưới.) */
+  --brand-900: #0A2F6E;
+  --brand-700: #0B47A8;
+  --brand-600: #0050D0;
+  /* --brand-100 ĐÃ XOÁ ở R3 (R1 đặt hạn chót: "hết R3 mà vẫn 0 nơi dùng thì xoá").
+     Ba số đo là lý do, không phải "dọn cho gọn":
+       · so với --brand-050 chỉ hơn 1.15 lần độ sáng - hai nền gần như trùng, không tạo được bậc;
+       · so với nền .content mới chỉ 1.16 - cũng không nổi lên được;
+       · và nó TRƯỢT AA với --fg-muted (4.13) nên không dùng làm nền chữ phụ được.
+     Tức nó không có vai nào trong thang bốn bậc ở trên. Cần một xanh nhạt trung gian thì lấy
+     --brand-050; cần đậm hơn thì --brand-600. */
+  --brand-050: #F0F4FC;
+  /* Bản MỜ của --brand-900, dùng làm nền khối chữ ĐẶT TRÊN ẢNH ở hero Landing.
+     🔴 HAI THỨ NÀY PHẢI ĐI CÙNG NHAU: đổi --brand-900 thì phải đổi cả rgb ở đây (CSS không lấy
+     được kênh màu từ một biến hex mà không dùng color-mix, vốn chưa an toàn với browserslist
+     của dự án).
+     Vì sao 0.85 chứ không thấp hơn: điểm ảnh SÁNG NHẤT của ảnh hero là #faf9f5; phủ 85% màu
+     #0A2F6E lên nó ra #2D4D82, tương phản với chữ trắng = 8.38:1. Hạ xuống 0.70 thì điểm đó chỉ
+     còn ~5.6 và mép khối bắt đầu lộ chi tiết ảnh sau chữ. Xem mục 80. */
+  --brand-900-panel: rgba(10, 47, 110, 0.85);
+
+  /* Hồng cho NỀN TỐI (rail). LẬP LUẬN GIỮ NGUYÊN, chỉ đổi số: --accent-crimson #A3154F được
+     chọn cho nền sáng (7.56:1 trên trắng) nhưng trên nền --brand-900 chỉ còn 1.69:1 — không
+     đạt ngưỡng 3:1 của WCAG 1.4.11 cho chỉ báo giao diện phi văn bản. Nên nền tối phải có
+     token RIÊNG, không mượn được token của nền sáng. Đây là lý do HAI token cùng tồn tại. */
+  --accent-onDark: #FF7BA8;   /* 5.26:1 trên --brand-900 */
+
+  /* Xanh nhạt dùng làm CHỮ trên nền tối. Đặt tên song song với --accent-onDark: hậu tố `onDark`
+     là lời hứa "token này chỉ đúng trên nền tối", đừng đem lên nền sáng (trên trắng chỉ 2.4:1).
+     Đo trên --brand-900: 5.80:1 - đạt AA cho chữ thường.
+     🔴 ĐÂY KHÔNG PHẢI --brand-100 SỐNG LẠI. --brand-100 (#D9E5F9) bị xoá ở R3 vì nó là màu NỀN
+     gần trùng --brand-050 và trượt AA với --fg-muted. Token này là màu CHỮ cho nền tối - khác
+     vai trò, khác độ sáng, khác chỗ dùng. Đừng gộp hai cái.
+     Dùng ở: cụm từ nhấn trong tiêu đề khối "Góc Cựu sinh viên tiêu biểu". */
+  --brand-onDark: #7EB0FF;    /* 5.80:1 trên --brand-900 */
+
+  /* Thang chữ — 6 bậc, tỉ lệ ~1.25 */
+  --text-xs: 12px; --text-sm: 13px; --text-md: 14px;
+  --text-lg: 16px; --text-xl: 20px; --text-2xl: 25px;
+
+  /* Khoảng cách — lưới 4px, 7 bậc */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+
+  /* Bo góc — 3 bậc, mỗi bậc một vai trò */
+  --radius-sm: 4px;   /* badge, ô nhỏ     */
+  --radius-md: 6px;   /* nút, ô nhập, thẻ */
+  --radius-lg: 12px;  /* hộp thoại, panel */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 CHỖ NÀY TỪNG CÓ RÀO CHẮN `prefers-reduced-motion` — ĐÃ BỎ THEO CHỈ THỊ CỦA LEAD (R14)
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   ĐÂY KHÔNG PHẢI SÓT KHI DỌN. Khối `@media (prefers-reduced-motion: reduce)` với
+   `animation-duration/transition-duration: .01ms !important` cho `*` đã bị bỏ CÓ CHỦ ĐÍCH.
+
+   ⚠️ ĐỪNG "sửa lại cho đúng chuẩn" mà không hỏi lead. Nếu bạn tới đây vì thấy cổng thiếu rào
+   chắn chuyển động: đúng, nó thiếu, và đó là một quyết định đã ghi nhận.
+
+   Lý do, hệ quả, và CÁCH KHÔI PHỤC đầy đủ: xem `docs/ui-no-ky-thuat.md` mục 86.
+   Tóm tắt cách khôi phục: lấy lại nguyên khối này từ lịch sử git của `src/index.css` (khối do
+   lô R1 thêm vào, còn nguyên ở mọi commit trước R14), rồi trả cửa thoát sớm
+   `prefers-reduced-motion` vào `src/hooks/useHienDanKhiCuonToi.ts`. Cả hai phải làm CÙNG NHAU.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   HIỆN DẦN KHI CUỘN TỚI (R10) — hai rule, dùng cùng hook useHienDanKhiCuonToi
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 KHÔNG CÓ `opacity: 0` NÀO ĐƯỢC ĐẶT SẴN Ở ĐÂY. Cả lớp `.csv-hien-dan` lẫn thuộc tính
+   `data-hien` đều do JS gắn vào lúc chạy. Phần tử chưa được hook chạm tới thì KHÔNG khớp rule
+   nào bên dưới ⇒ hiện bình thường. Lý do đầy đủ ở đầu useHienDanKhiCuonToi.ts.
+   ⚠️ Đừng "dọn" thành `.csv-hien-dan { opacity: 0 }` cho gọn - đó chính là biến thể làm nội
+   dung tàng hình vĩnh viễn khi JS trục trặc.
+
+   Đặt ở đây (toàn cục) chứ không trong CSS module của một màn: đây là tiện ích CHUYỂN ĐỘNG dùng
+   chung, không phải kiểu dáng của màn nào. Tiền tố `csv-` để không đụng tên lớp của thư viện
+   ngoài.
+
+   🔴 R14: hiệu ứng này KHÔNG CÒN được rào chắn `prefers-reduced-motion` che nữa - cả khối @media
+   lẫn cửa thoát sớm trong hook đều đã bỏ theo chỉ thị lead. Người bật giảm chuyển động ở hệ điều
+   hành sẽ thấy khối trượt vào bình thường. Xem mục 86. */
+/* 🔴 SELECTOR PHẢI CÓ `[data-hien]` — ĐỪNG RÚT GỌN THÀNH `.csv-hien-dan`.
+   Bản R10 viết `.csv-hien-dan { transition: ... }`, độ đặc hiệu (0,1,0). Lớp CSS module của thẻ
+   vai trò cũng là (0,1,0) VÀ nằm SAU trong bundle (vị trí 19896 so với 1996), nên rule này:
+       .audienceCard { transition: transform 200ms ease, box-shadow 200ms ease; }
+   GHI ĐÈ toàn bộ shorthand ⇒ `opacity` mất hẳn transition, ba thẻ vai trò BẬT ra thay vì hiện
+   dần. Đây là nguyên nhân thật của "cuộn không thấy hiệu ứng" ở ba thẻ.
+   Thêm `[data-hien]` nâng lên (0,2,0) nên không lớp module nào ghi đè được nữa.
+   ⚠️ Vẫn KHÔNG dùng `!important` để chữa những va chạm kiểu này: nâng độ đặc hiệu là cách sửa
+   nói đúng ý định ("rule này cụ thể hơn"), còn `!important` là cách sửa xoá sạch mọi khả năng
+   ghi đè về sau, kể cả của chính ta.
+   (Trước R14 còn một lý do NẶNG HƠN: rào chắn prefers-reduced-motion dùng `*` + `!important`,
+   nên một `!important` ở đây sẽ THẮNG nó. Rào chắn đó nay đã bỏ - xem mục 86 - nhưng nếu ai
+   khôi phục lại thì lý do đó SỐNG LẠI. Đừng dùng `!important` ở đây.) */
+.csv-hien-dan[data-hien] {
+  /* Transition khai ở TRẠNG THÁI NỀN, không khai kèm trạng thái hiện: nó phải tồn tại sẵn từ
+     trước khi `data-hien` đổi giá trị, nếu không lần đổi đầu tiên sẽ nhảy cóc không chuyển. */
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+/* 24px là quãng trượt vừa đủ thấy mà không đẩy bố cục: `transform` KHÔNG gây reflow (nó chạy ở
+   khâu compositing) nên không đụng tới chiều cao trang, và thanh cuộn không nhảy. Dùng
+   `margin-top` hay `top` để trượt sẽ làm đúng điều ngược lại. */
+.csv-hien-dan[data-hien="false"] {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+/* Cuộn mượt cho thanh neo của Landing (R7). Đặt ở html vì Landing để CẢ TRANG cuộn.
+   🔴 R14: trước đây khối @media(prefers-reduced-motion) ép `scroll-behavior: auto !important`
+   nên người bật giảm chuyển động nhảy thẳng tới khu vực. Khối đó ĐÃ BỎ, nên nay MỌI người đều
+   cuộn trượt. Xem mục 86.
+   Không ảnh hưởng màn trong: ở đó phần cuộn là .content, không phải html. */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+.mainColumn {
+  /* "bold" = 700, viết bằng số cho thống nhất với phần còn lại của repo. 0px thay đổi. */
+  font-weight: 700;
+}
+
+.pop-up-header {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 1rem;
+  text-align: left;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* 🗑️ `.pop-up-header-title` (1.2rem / bold) đã xoá 2026-09-14: 0 tham chiếu trong toàn bộ src.
+   ⚠️ Hai class anh em `.pop-up-header` và `.pop-up-header-actions` ngay trên/dưới CŨNG không có
+   tham chiếu nào - nhưng lô này chỉ được duyệt xoá đúng class có font-size, nên để nguyên.
+   Ai dọn tiếp thì xoá luôn cả cụm. */
+
+.pop-up-header-actions {
+  float: right;
+}
+
+#__primerPortalRoot__ {
+  z-index: 1600;
+}
+
+/* Khung tin nhắn */
+.message {
+  opacity: 0;
+  /* Khởi đầu ẩn */
+  transform: translateY(50px);
+  /* Bắt đầu ở vị trí thấp hơn */
+  animation: slideUp 0.3s ease-out forwards;
+  /* Gọi animation */
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.link {
+  text-decoration: none;
+  color: unset;
+}
+
+.input-align-right input {
+  text-align: right;
+}
+
+.myTable {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+  /* border: 1px solid #d0d7de; */
+  border-radius: 0.375rem;
+  table-layout: fixed;
+
+
+}
+
+.myTable.hasPaging {
+  margin-bottom: 41px;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.myTable tbody {
+  border-bottom: 1px solid #d0d7de;
+}
+
+.myTable tr:hover {
+  background-color: #F5F8FA;
+}
+
+.fixed_column {
+  position: sticky;
+  left: 0;
+  /* background-color: red; */
+  z-index: 0;
+  background-color: #fff;
+
+}
+
+.fixed_column_header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 3 !important;
+  background-color: #F5F8FA;
+
+}
+
+.myTable thead {
+  font-weight: 500;
+  background-color: #F5F8FA;
+}
+
+.myTable td {
+  padding: 0.5rem 0.75rem;
+}
+
+.myTable th:not(:last-child),
+.myTable td:not(:last-child) {
+  border-right: 1px solid #d0d7de;
+}
+
+
+.myTable thead tr td {
+  border-bottom: 1px solid #d0d7de;
+  font-weight: 600;
+  color: #656d76;
+  padding: 0.5rem 0.75rem;
+}
+
+.myTable thead tr th {
+  border-bottom: 1px solid #d0d7de;
+  font-weight: 600;
+  color: #656d76;
+  padding: 0.5rem 0.75rem;
+
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #F5F8FA;
+}
+
+
+
+/* Apply a border to the bottom of all but the last row */
+.myTable>thead>tr:not(:last-child)>th,
+.myTable>thead>tr:not(:last-child)>td,
+.myTable>tbody>tr:not(:last-child)>th,
+.myTable>tbody>tr:not(:last-child)>td,
+.myTable>tfoot>tr:not(:last-child)>th,
+.myTable>tfoot>tr:not(:last-child)>td,
+.myTable>tr:not(:last-child)>td,
+.myTable>tr:not(:last-child)>th,
+.myTable>thead:not(:last-child),
+.myTable>tbody:not(:last-child),
+.myTable>tfoot:not(:last-child) {
+  border-bottom: 1px solid #d0d7de;
+}
+
+.focused {
+  /* background-color: red;        */
+  padding: 0px !important;
+  border-radius: 2px !important;
+  /* border-color: royalblue; */
+  /* outline: 2px; */
+  /* border: 2px solid #DE3F0F; */
+  /* outline: 2px solid #DE3F0F; */
+  /* Vòng chỉ báo ô đang chọn. inset -> vẽ BÊN TRONG ô, tức nằm trên nền ô của bảng (trắng
+     hoặc #F5F8FA), là nền SÁNG -> dùng var(--accent-crimson), không dùng var(--accent-onDark).
+     Đổi từ #DE3F0F sang token cũng là đổi GIÁ TRỊ: #DE3F0F 4.35:1 -> #A3154F 7.56:1 trên nền
+     trắng, 7.09:1 trên #F5F8FA. */
+  box-shadow: inset var(--accent-crimson) 0px 0px 0px 2px;
+  /* overflow: hidden!important; */
+}
+
+/* Màu nền cho ô đã chọn */
+.rangeSelected {
+  background-color: rgba(84, 174, 255, 0.4) !important;
+}
+
+
+/* Tùy chỉnh border cho vùng được chọn */
+.myTable td.rangeSelected:first-child {
+  border-left: 1px solid #007bff !important;
+  /* border-top: 1px solid #007bff !important; */
+}
+
+.myTable td.rangeSelected:last-child {
+  border-right: 1px solid #007bff !important;
+}
+
+.myTable.rangeSelection {
+  user-select: none;
+  /* Vô hiệu hóa chọn văn bản */
+}
+
+
+.text-input-noborder {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}

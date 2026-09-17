@@ -1,0 +1,144 @@
+.tabsContainer {
+  width: 100%;
+}
+
+.tabsList {
+  display: flex;
+  border-bottom: none;
+  background-color: #f5f5f4;
+  padding: 0px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Tab Item styles */
+.tabItem {
+  position: relative;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 400;
+  /* 14px = đúng bằng --text-md, đổi token là 0px thay đổi. */
+  font-size: var(--text-md);
+  color: #24292f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  /* background: transparent; */
+  border: none;
+  outline: none;
+  /* R3: `all 0.1s ease` -> token. `all` còn khiến mọi thuộc tính đổi đều chạy chuyển tiếp,
+     kể cả những thứ không nên (vd bề rộng khi đổi tab). Liệt kê đúng thứ cần. */
+  transition: background-color var(--transition-fast), color var(--transition-fast),
+              border-color var(--transition-fast);
+  border-right: 1px solid #e1e4e8;
+  border-radius: 0;
+  height: 32px;
+  margin: 4px 4px;
+}
+
+.tabItem:last-child {
+  border-right: none;
+}
+
+.tabItem:hover:not(.active):not(.disabled) {
+  background-color: #eaeef2;
+}
+
+.tabItem.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tabItem.active {
+  background-color: #ffffff;
+  color: #24292f;
+  font-weight: 400;
+  box-shadow: none;
+}
+
+
+/* Card style tabs - styled like the image */
+.tabs-card {
+  /* background-color: #f6f8fa; */
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e1e4e8;
+}
+
+.tabs-card .tabItem {
+  border-right: 1px solid #e1e4e8;
+  padding: 8px 16px;
+  border-bottom: none;
+  border-top: none;
+   background-color: #f5f5f4;
+}
+
+.tabs-card .tabItem:last-child {
+  border-right: none;
+}
+
+.tabs-card .tabItem.active {
+  background-color: #ffffff;
+  border-radius: 6px;
+}
+
+/* Badge styling - styled like numbers in parentheses */
+.badge {
+  display: inline;
+  margin-left: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  background-color: transparent;
+}
+
+/* .activeBadge, .tabItem.active .badge {
+  color: inherit;
+  background-color: transparent;
+} */
+
+/* Tab content */
+.tabContent {
+  width: 100%;
+  margin-top: 0;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  background-color: #ffffff;
+  padding: 16px;
+}
+
+/* Grid styles for tabs list */
+.tabsList.grid-cols-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 40px;
+}
+
+.tabsList.grid-cols-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 40px;
+}
+
+.tabsList.grid-cols-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 40px;
+}
+
+.tabsList.grid-cols-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  height: 40px;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.centered {
+  justify-content: center;
+}

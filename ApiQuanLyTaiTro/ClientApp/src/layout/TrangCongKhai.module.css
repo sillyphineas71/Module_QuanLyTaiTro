@@ -1,0 +1,15 @@
+/* Khung trang công khai (N5). Cùng bộ xương với .page/.content của Landing: cột flex cao tối
+   thiểu 100vh, <main> giãn đẩy footer xuống đáy khi nội dung ngắn (trang chi tiết một bài ngắn,
+   trạng thái rỗng/lỗi). */
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface-page);
+}

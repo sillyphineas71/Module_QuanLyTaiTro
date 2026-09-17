@@ -1,0 +1,288 @@
+/* R3: bảng là một MẶT LÀM VIỆC nổi trên nền --surface-page của .content.
+   Ba thay đổi: nền trắng tường minh (trước đây chỉ có ô <td> trắng, khung thì trong suốt),
+   đổ bóng nhẹ, và hai giá trị hardcode chuyển sang token (#d0d7de và 0.375rem = đúng bằng
+   --border-default và --radius-md, nên KHÔNG đổi pixel nào).
+
+   ⚠️ FILE DÙNG CHUNG - MÀN BỊ ẢNH HƯỞNG (đã grep, toàn bộ đều thuộc cổng, không còn màn ngoài
+   alumni nào): Thống kê · Duyệt tài khoản · Danh mục (2 tab) · Đợt thu thập (bảng lịch sử) ·
+   Xuất danh sách lớp · Nhập danh sách (bảng trong hộp thoại) · Hồ sơ (Quá trình công tác) ·
+   AppMobileList. Mở đủ 8 chỗ khi QA. */
+.container {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-default);
+    box-shadow: var(--shadow-small);
+
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto;
+    /* overflow-y: hidden; */
+}
+
+.pagingContainer {
+    position: absolute;
+    bottom: 1px;
+    /* width: 100%; */
+    background-color: #fff;
+    left: 0;
+    right: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+    height: 40px;
+    border-top: 1px solid #d0d7de;
+    border-left: 1px solid #d0d7de;
+    border-right: 1px solid #d0d7de;
+    border-bottom-left-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+    border-bottom: 1px solid #d0d7de;
+}
+
+.pagingContainer :global([class^="Pagination"]) {
+    /* background-color: red; */
+    margin: 0px;
+}
+
+.pagingContainer :global([class^="Pagination"]) a {
+    line-height: 1.5;
+}
+
+.selected {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+}
+
+
+/* 🗑️ `.title` (24px/600) và `.subTitle` (12px) đã xoá 2026-09-14: không TSX nào trong
+   data-table dùng `styles.title` / `styles.subTitle`. Tiêu đề bảng thật ra do `Toolbar.tsx`
+   dựng bằng <PageCaption> và một <Text> inline, không đi qua hai class này.
+   ⚠️ ĐỪNG nhầm: PROP `subTitle` của DataTable VẪN SỐNG (Toolbar đọc nó). Chỉ CLASS cùng tên
+   là chết. Không màn nào của cổng truyền `title`/`subTitle` nên cả nhánh đó hiện không chạy. */
+
+.myTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    /* border-collapse: collapse; */
+    /* border: 1px solid #d0d7de; */
+    border-radius: 0.375rem;
+    table-layout:fixed;
+
+
+}
+
+.myTable.hasPaging {
+    margin-bottom: 41px;
+    border-bottom: 1px solid #d0d7de;
+}
+
+.myTable tbody {
+    border-bottom: 1px solid #d0d7de;
+}
+
+.myTable tbody tr:hover td {
+    background-color: #F5F8FA;
+}
+
+.fixed_column {
+    position: sticky;
+    left: 0;
+    /* background-color: red; */
+    z-index: 0;
+    background-color: #fff;
+
+}
+
+.fixed_column_header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3 !important;
+    background-color: #F5F8FA;
+
+}
+
+.myTable thead {
+    font-weight: 500;
+    background-color: #F5F8FA;
+}
+
+.myTable tbody td {
+    padding: 0.5rem 0.75rem;
+    /* Nền đặc MẶC ĐỊNH (không trong suốt, không phụ thuộc :hover) - để không lộ nền gradient của
+       trang phía sau, và để che phần chữ tràn nhẹ từ ô bên cạnh nếu overflow-wrap không đủ. */
+    background-color: #fff;
+    /* Chuỗi dài không có khoảng trắng (GUID id_sv/ma_sv...) tự xuống dòng ĐÚNG BÊN TRONG ô,
+       không tràn/đè lên ô kế bên. */
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.myTable.noPadding td {
+    padding: 0;
+}
+
+.myTable.noPadding th {
+    padding: 0;
+}
+
+.myTable th:not(:last-child),
+.myTable td:not(:last-child) {
+    border-right: 1px solid #d0d7de;
+}
+
+
+.myTable thead tr td {
+    border-bottom: 1px solid #d0d7de;
+    font-weight: 600;
+    color: #656d76;
+    padding: 0.5rem 0.75rem;
+}
+
+.myTable thead tr th {
+    border-bottom: 1px solid #d0d7de;
+    font-weight: 600;
+    color: #656d76;
+    padding: 0.5rem 0.75rem;
+
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #F5F8FA;
+}
+
+/* Apply a border to the bottom of all but the last row */
+.myTable>thead>tr:not(:last-child)>th,
+.myTable>thead>tr:not(:last-child)>td,
+.myTable>tbody>tr:not(:last-child)>th,
+.myTable>tbody>tr:not(:last-child)>td,
+.myTable>tfoot>tr:not(:last-child)>th,
+.myTable>tfoot>tr:not(:last-child)>td,
+.myTable>tr:not(:last-child)>td,
+.myTable>tr:not(:last-child)>th,
+.myTable>thead:not(:last-child),
+.myTable>tbody:not(:last-child),
+.myTable>tfoot:not(:last-child) {
+    border-bottom: 1px solid #d0d7de;
+}
+
+.focused {
+    /* background-color: red;        */
+    padding: 0px !important;
+    border-radius: 2px !important;
+    /* border-color: royalblue; */
+    /* outline: 2px; */
+    /* border: 2px solid #DE3F0F; */
+    /* outline: 2px solid #DE3F0F; */
+    box-shadow: inset #DE3F0F 0px 0px 0px 2px;
+    /* overflow: hidden!important; */
+}
+
+/* Màu nền cho ô đã chọn */
+.rangeSelected {
+    /* background-color: rgba(84, 174, 255, 0.4) !important; */
+    background-color: #ffebe9 !important;
+    /* opacity: 0.5; */
+    color: #DE3F0F;
+    /* border: 1px solid #ddf4ff !important; */
+
+}
+
+
+/* Tùy chỉnh border cho vùng được chọn */
+.myTable td.rangeSelected:first-child {
+    /* border-left: 1px solid #007bff !important; */
+    /* border-top: 1px solid #007bff !important; */
+}
+
+.myTable td.rangeSelected:last-child {
+    /* border-right: 1px solid #007bff !important; */
+}
+
+.myTable.rangeSelection {
+    user-select: none;
+    /* Vô hiệu hóa chọn văn bản */
+}
+
+/* ===== SẮP XẾP BA TRẠNG THÁI TRÊN TIÊU ĐỀ CỘT (dựng ở Header.tsx) =====
+   Tiêu đề cột sắp xếp được là một NÚT, nhưng phải trông như tiêu đề: không đổi font, không đổi
+   cỡ chữ, không đổi chiều cao dòng. Thứ duy nhất thêm vào là con trỏ, dấu mũi tên, và phản hồi
+   hover/focus. Đổi mấy thứ đó là hàng loạt bảng lệch nhau một hai pixel ở chiều cao header. */
+.sortHeader {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    cursor: pointer;
+    /* Thừa hưởng màu #656d76 của th - tiêu đề chưa sắp xếp KHÔNG được nổi hơn tiêu đề thường. */
+    color: inherit;
+    border-radius: var(--radius-sm);
+    /* Nới vùng bấm ra 2px mỗi phía cho dễ trúng, rồi kéo lại bằng margin âm để ô header KHÔNG
+       cao thêm - nếu không, bật sort sẽ làm mọi bảng nhích chiều cao. */
+    padding: 2px;
+    margin: -2px;
+    /* Bấm nhiều lần liên tiếp (vòng ba trạng thái) không được bôi đen chữ tiêu đề. */
+    user-select: none;
+}
+
+/* Hover: đậm chữ tiêu đề lên mức fg.default (14.81:1). Đây là tín hiệu "bấm được" thứ hai,
+   cạnh con trỏ - nhưng chỉ có ở chuột, nên KHÔNG được là tín hiệu duy nhất (mũi tên mờ mới là
+   tín hiệu lúc nghỉ, thấy được cả khi không rê chuột). */
+.sortHeader:hover {
+    color: #1F2328;
+}
+
+/* Bàn phím: Tab tới đây phải THẤY được. focus-visible chứ không phải focus, để bấm chuột không
+   để lại viền. */
+.sortHeader:focus-visible {
+    outline: 2px solid var(--accent-fg);
+    outline-offset: 1px;
+}
+
+/* Cột ĐANG sắp xếp: chữ tiêu đề chuyển xanh #0550ae (7.12:1 trên nền header #F5F8FA, so với
+   4.92:1 của #656d76 lúc nghỉ). Đây là tín hiệu thứ ba, cùng với hình dáng mũi tên và aria-sort
+   - cột đang sắp xếp phải nhận ra được khi liếc qua cả bảng, không phải soi từng mũi tên. */
+.sortHeaderActive {
+    color: #0550ae;
+}
+
+.sortGlyph {
+    /* Không cho mũi tên bị bóp khi tiêu đề dài hơn bề rộng cột. */
+    flex: 0 0 auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   .focusedRow — DÒNG ĐANG CHỌN. Class này được Row.tsx tham chiếu từ đầu nhưng CHƯA TỪNG TỒN
+   TẠI trong file này (cả ở ClientApp2 cũng không) ⇒ tính năng "nhớ dòng đang chọn" chưa từng
+   hiển thị ở bất kỳ màn nào của cả hai app. Thêm ở đây để màn Lịch sử gửi mail dùng được.
+
+   🔴 BA ĐIỀU PHẢI BIẾT TRƯỚC KHI SỬA:
+
+   1. TÔ Ở <td>, KHÔNG TÔ Ở <tr>. Dòng 113 đặt `.myTable tbody td { background-color: #fff }`
+      — nền ĐẶC trên từng ô. Đặt nền lên <tr> thì bị các ô che sạch, không thấy gì.
+
+   2. ĐỘ ƯU TIÊN NGANG VỚI :hover, NÊN RULE NÀY PHẢI ĐỨNG SAU.
+      `.myTable tbody tr:hover td`        (dòng 82) = (0,2,3)
+      `.myTable tbody tr.focusedRow > td`           = (0,2,3)
+      Bằng nhau ⇒ cái đứng SAU trong file thắng. Đó là lý do khối này nằm cuối file chứ không
+      nằm cạnh `.focused`. Đừng di chuyển nó lên trên dòng 82.
+
+   3. 🔴 NỀN KHÔNG PHẢI LÀ TÍN HIỆU CHÍNH — VẠCH TRÁI MỚI LÀ. Đã đo:
+        màu hover của bảng   #F5F8FA
+        --surface-subtle     #F6F8FA   → cách hover 1.0/255, mắt KHÔNG phân biệt được
+      Nghĩa là chỉ tô nền thì "đang chọn" trông y hệt "đang rê chuột". Mọi tông xanh tách được
+      khỏi hover thì lại rớt AA (đã đo: --brand-050 #F0F4FC = 4.42, #EDF5FF = 4.43, #E8F0FE =
+      4.25 — tất cả tính với --attention-fg #9a6700, token chặt nhất trong bảng).
+      ⇒ Nền chỉ để dòng "sáng lên" khi chuột ở nơi khác. VẠCH TRÁI 3px là thứ sống sót qua hover
+        và cũng là thứ đáp ứng "màu không được là tín hiệu duy nhất".
+
+   ⚠️ Vạch trái dùng `box-shadow: inset`, KHÔNG dùng `border-left`: border cộng vào bề rộng ô
+      và đẩy chữ sang phải 3px ⇒ dòng đang chọn lệch cột so với mọi dòng khác. box-shadow không
+      chiếm chỗ trong bố cục.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+.myTable tbody tr.focusedRow > td {
+    background-color: var(--surface-subtle);
+}
+
+.myTable tbody tr.focusedRow > td:first-child {
+    box-shadow: inset 3px 0 0 0 var(--brand-600);
+}

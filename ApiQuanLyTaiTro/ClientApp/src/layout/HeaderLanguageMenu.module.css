@@ -1,0 +1,77 @@
+/* Nút chuyển ngôn ngữ - nằm trong DẢI GRADIENT của tầng trên header, tức trên NỀN TỐI.
+   Chữ trắng trên vùng cuối gradient (gần #A3154F) = 7.56:1. Mọi màu ở đây phải tính theo nền
+   tối; đừng lấy token chữ của nền sáng (--fg-muted trên nền này chỉ còn ~1.9:1). */
+.nut {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    /* Reset nút: nền trong suốt để thấy gradient phía sau, viền mảnh để nó vẫn đọc ra là NÚT
+       chứ không phải chữ trang trí.
+       🔴 ĐỘ MỜ 0.6, KHÔNG PHẢI 0.4 — đo chứ không ước. Nút nằm ở mép PHẢI của dải, tức trên đoạn
+       CUỐI gradient (~#A3154F). Viền trắng 40% hoà ra #C87395, so với nền đó chỉ được **2.28:1**,
+       TRƯỢT ngưỡng 3:1 của WCAG 1.4.11 cho ranh giới thành phần giao diện. Trắng 60% hoà ra
+       #DAA1B9 = **3.52:1**, đạt.
+       ⚠️ Đừng hạ lại xuống cho "nhẹ nhàng hơn": chỗ tệ nhất là đầu đỏ, không phải đầu xanh. */
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--surface-default);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.nut:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.85);
+}
+
+/* Viền focus TRẮNG (không phải --brand-600 như trên nền sáng): nền ở đây là gradient xanh->đỏ,
+   một vòng xanh lam đặt lên đó gần như tàng hình. */
+.nut:focus-visible {
+    outline: 2px solid var(--surface-default);
+    outline-offset: 2px;
+}
+
+.nut:active {
+    background-color: rgba(255, 255, 255, 0.24);
+}
+
+/* Cờ SVG nội tuyến (xem lý do KHÔNG dùng emoji ở HeaderLanguageMenu.tsx).
+   🔴 VIỀN TRẮNG ĐẶC, KHÔNG PHẢI TRẮNG 50% — đo lại ở R17 mới thấy bản R9 sai chỗ này.
+   Nút nằm ở mép PHẢI của dải, tức trên đoạn CUỐI gradient (~#A3154F). Nền đỏ của cờ (#DA251D)
+   so với nền đó chỉ được **1.54:1** - tức mảng đỏ của lá cờ gần như TAN vào nền, và thứ duy
+   nhất còn đọc được là ngôi sao vàng (7.04:1) trông như trôi lơ lửng.
+   Viền trắng 50% hoà ra #D18AA7, chỉ 2.85:1 so với nền - dưới cả ngưỡng 3:1, nên nó không đủ
+   sức tách lá cờ ra.
+   Trắng ĐẶC: 7.56:1 so với nền và 4.93:1 so với chính nền đỏ của cờ ⇒ lá cờ đọc ra là một vật
+   thể riêng ở cả hai phía. ⚠️ Đừng hạ lại xuống cho "nhẹ nhàng": chỗ tệ nhất là đầu ĐỎ của
+   gradient, không phải đầu xanh. */
+.co {
+    width: 18px;
+    height: 12px;
+    display: block;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px var(--surface-default);
+}
+
+/* Nhãn "Sắp có" trong danh sách thả xuống. Danh sách này là NỀN SÁNG (overlay của Primer), nên
+   ở đây dùng token nền sáng - ngược hẳn với nút ở trên. --fg-muted trên --surface-subtle = 5.0:1.
+   Chữ mờ MỘT MÌNH là chưa đủ (người dùng đọc ra "hỏng"); chip nói rõ LÝ DO. */
+.chipSapCo {
+    display: inline-block;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-subtle);
+    color: var(--fg-muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 18px;
+    white-space: nowrap;
+    text-transform: none;
+}

@@ -1,0 +1,282 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   FOOTER — CHỈ CÓ Ở LANDING. Khung quản trị KHÔNG có footer.
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 ĐỪNG mang khối này sang AppLayout. Hai lý do, lý do sau nặng hơn:
+
+   1. KỸ THUẬT: `.page` của AppLayout cao đúng `100vh` và `.body` ăn phần còn lại. Chèn một
+      <footer> vào đó là TRỪ THẲNG vào chiều cao `.body` ⇒ đụng chuỗi flex của BỐN màn đang chạy
+      `fillAvailableHeight` (Thống kê · Duyệt · Danh mục · Xuất danh sách). Landing thì khác:
+      `.page` của nó dùng `min-height: 100vh`, tức nó GIÃN theo nội dung và cả trang cuộn.
+   2. THỂ LOẠI: công cụ quản trị vốn không có footer - nó là một KHUNG ôm lấy vùng làm việc
+      (Gmail, Notion, mọi bảng điều khiển đều vậy). Site mẫu là trang giới thiệu công khai,
+      khác thể loại. Chép hình thức mà không chép điều kiện chính là lỗi đã tránh ở màn Danh mục.
+
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 GRADIENT TỐI + LOGO TÔ TRẮNG — HAI THỨ NÀY ĐI THÀNH CẶP, ĐỪNG TÁCH
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   R4 từng BÁC nền tối vì logo màu chỉ đạt 1.86 trên --brand-900. R7 đổi sang gradient
+   --brand-900 -> --accent-crimson, và đo lại thì TỆ HƠN NỮA.
+
+   Đã giải mã điểm ảnh logo rồi dựng lại đúng vị trí nó nằm (cao 56px, đặt ở y=32 trong footer
+   ~340px ⇒ phủ t = 0.094 -> 0.259 của gradient), và tính nền RIÊNG cho từng dòng logo:
+
+       dải logo   nền tại đó   TB tương phản   tệ nhất
+         1        #1d2c6a        2.19           1.65
+         2        #222b69        2.14           1.61
+         3        #282a68        1.94           1.62
+         4        #2d2967        1.87           1.62
+         5        #322866        1.83           1.57
+       ĐIỂM TỆ NHẤT: 1.57   ·   100.0% điểm ảnh DƯỚI 3:1
+
+   Vì sao đây là CẶP XẤU NHẤT trong bốn lần đo (R2 header 1.00 · R3 rail 1.69 · R4 footer 1.86):
+   logo đi xanh->hồng, gradient cũng đi xanh->đỏ, nên hai thứ TỐI DẦN CÙNG NHỊP - phần nào của
+   logo cũng gặp đúng phần nền cùng độ sáng với nó.
+
+   => `filter: brightness(0) invert(1)` trên .logo: brightness(0) nhân RGB với 0 (alpha GIỮ
+   NGUYÊN) -> bóng đen; invert(1) lật thành TRẮNG. Kết quả là logo bóng trắng, giữ nguyên hình
+   dạng và khử răng cưa. Đo lại: TỆ NHẤT 12.85.
+
+   ⚠️ ĐỪNG BỎ `filter` MÀ GIỮ GRADIENT - quay lại 1.57, logo tan hoàn toàn.
+   ⚠️ ĐỪNG BỎ GRADIENT MÀ GIỮ `filter` - logo trắng trên nền sáng cũng tan y như vậy.
+   Muốn logo MÀU trong footer thì phải trả footer về nền sáng (bản R4), hoặc có một file logo
+   nghịch đảo thật (nợ mục 66). Đừng chọn nửa nọ nửa kia.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+.footer {
+    /* Chữ trắng đọc được suốt chiều cao: đã đo 9 mốc, thấp nhất 7.56 ở đáy, cao nhất 12.96 ở
+       t=0.125. Không mốc nào tụt dưới AA (bài học R4: kiểm mốc GIỮA, không chỉ hai đầu). */
+    background: linear-gradient(to bottom, var(--brand-900), var(--accent-crimson));
+    color: var(--surface-default);
+    padding: var(--space-6) var(--space-5) var(--space-5);
+}
+
+/* Bốn cột: nhận diện + liên hệ rộng gấp đôi, ba cột liên kết bằng nhau. */
+.inner {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: var(--space-6) var(--space-7);
+    align-items: start;
+}
+
+/* ── Cột 1: nhận diện + liên hệ ─────────────────────────────────────────────────────────── */
+.cotNhanDien {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.donVi {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+/* 🔴 `filter` KHÔNG PHẢI TRANG TRÍ - xem khối đo ở đầu file. Bỏ nó là logo tụt về 1.57. */
+.logo {
+    height: 56px;
+    width: auto;
+    display: block;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+}
+
+/* MỘT <p> chứa hai <span> block thay vì hai <p>: đây là MỘT tên gọi có hai tầng, không phải hai
+   câu rời - trình đọc màn hình đọc liền một mạch. */
+.khoiTen {
+    margin: 0;
+    min-width: 0;
+}
+
+/* Đơn vị VẬN HÀNH cổng: lớn nhất, trắng đặc. Trên nền tại vùng này = 12.85:1. */
+.tenDonVi {
+    display: block;
+    font-size: var(--text-lg);
+    font-weight: 800;
+    line-height: 1.35;
+    text-transform: uppercase;
+    color: var(--surface-default);
+    overflow-wrap: anywhere;
+}
+
+/* Cơ quan chủ quản: nhỏ hơn và chìm hơn.
+   Dùng ĐỘ MỜ của trắng chứ KHÔNG dùng --fg-muted: token đó là màu chữ cho NỀN SÁNG (#656d76),
+   đặt lên nền tối này chỉ còn ~1.9:1. Trắng 78% trên nền tại vùng này vẫn trên 8:1. */
+.capTren {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.78);
+    overflow-wrap: anywhere;
+}
+
+.lienHe {
+    /* <address> được UA stylesheet in NGHIÊNG mặc định. Địa chỉ/số điện thoại in nghiêng thì
+       khó đọc hơn hẳn, mà thẻ này chọn vì NGỮ NGHĨA chứ không vì kiểu chữ. */
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    font-size: var(--text-md);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.dong {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+/* Icon chỉ là dấu hiệu hình cho LOẠI thông tin; nội dung thật là chữ bên cạnh (nên chúng đều
+   aria-hidden). Mờ hơn chữ để không tranh chú ý, vẫn trên 3:1 cho đồ hoạ phi văn bản. */
+.dongIcon {
+    display: flex;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+/* Liên kết mailto/tel. GẠCH CHÂN không được bỏ: thiếu nó thì độ mờ thành tín hiệu duy nhất
+   phân biệt "bấm được" với "chữ thường", mà độ mờ thì không ai đọc ra là liên kết. */
+.lienKet {
+    color: var(--surface-default);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    border-radius: var(--radius-sm);
+    transition: opacity var(--transition-fast);
+}
+
+.lienKet:hover {
+    opacity: 0.8;
+}
+
+.lienKet:focus-visible {
+    outline: 2px solid var(--surface-default);
+    outline-offset: 2px;
+}
+
+/* R13: phản hồi khi BẤM. Trên nền TỐI thì "đậm hơn" là mờ hơn nữa - ngược với liên kết trên nền
+   sáng. 0.65 vẫn cho tương phản > 5:1 với nền tại vùng đó, tức chỉ mờ trong khoảnh khắc bấm chứ
+   không tụt xuống mức khó đọc. */
+.lienKet:active {
+    opacity: 0.65;
+}
+
+/* ── Cột 2-4: ba nhóm liên kết ──────────────────────────────────────────────────────────── */
+.cotLink {
+    min-width: 0;
+}
+
+.tieuDeCot {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-md);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--surface-default);
+}
+
+.danhSach {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-size: var(--text-md);
+    line-height: 1.5;
+}
+
+/* Mục ĐÃ có URL. Gạch chân khi hover chứ không phải mặc định: trong một danh sách dọc mà mọi
+   mục đều gạch chân thì cả cột thành một mảng vạch. Vị trí trong danh sách + con trỏ đã báo
+   hiệu đủ. (Khác .lienKet ở trên - cái đó nằm LẪN trong dòng chữ nên cần gạch chân thường trực.) */
+.mucLink {
+    color: rgba(255, 255, 255, 0.88);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.mucLink:hover {
+    color: var(--surface-default);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.mucLink:focus-visible {
+    outline: 2px solid var(--surface-default);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* R13: phản hồi khi BẤM. Giữ nguyên gạch chân của :hover rồi hạ độ mờ - nếu bỏ gạch chân ở
+   :active thì lúc bấm gạch chân biến mất, trông như liên kết vừa hỏng. */
+.mucLink:active {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* 🔴 Mục CHƯA có URL - render <span>, KHÔNG phải <a>. Mờ hơn hẳn để nhìn là biết chưa bấm được,
+   và không có con trỏ tay. Đây là trạng thái TẠM: điền URL vào AppConst.footerLinks là nó tự
+   thành .mucLink, không phải sửa JSX. Xem khối cảnh báo ở AppConst. */
+.mucChuaCo {
+    color: rgba(255, 255, 255, 0.55);
+    cursor: default;
+}
+
+/* ── Dòng bản quyền ────────────────────────────────────────────────────────────────────── */
+.banQuyen {
+    width: 100%;
+    max-width: 1200px;
+    margin: var(--space-6) auto 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+/* ── Máy tính bảng ─────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1023.98px) {
+    /* Bốn cột không đủ chỗ: khối nhận diện chiếm trọn hàng trên, ba cột liên kết xuống hàng dưới. */
+    .inner {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .cotNhanDien {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ── Điện thoại ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+    .footer {
+        padding: var(--space-5) var(--space-4) var(--space-4);
+    }
+
+    /* MỘT cột. Ở 375px, ba cột liên kết mỗi cột chỉ ~100px sẽ cắt cụt "Đào tạo & Nghiên cứu"
+       và "Trang chủ Trường ĐHKHTN". */
+    .inner {
+        grid-template-columns: 1fr;
+        gap: var(--space-5);
+    }
+
+    .logo {
+        height: 44px;
+    }
+
+    /* Icon + chữ vẫn CÙNG HÀNG (khác bản R4 phải tách dòng): nay icon 16px thay cho nhãn chữ
+       "Địa chỉ"/"Điện thoại", nên hàng ngắn hơn nhiều và số điện thoại không còn bị cắt. */
+    .dong {
+        gap: var(--space-2);
+    }
+}

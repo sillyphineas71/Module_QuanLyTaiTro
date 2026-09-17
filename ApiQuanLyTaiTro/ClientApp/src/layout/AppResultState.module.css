@@ -1,0 +1,74 @@
+/* Trạng thái của VÙNG KẾT QUẢ (V2).
+   Khác hẳn components-ui/empty-state (một Flash banner ngang): cái này chiếm TRỌN vùng kết quả,
+   thay cho bảng chứ không nằm trong một ô của bảng. Nhờ vậy App runtime không còn đi qua
+   nhánh dòng rỗng của DataTable (Rows.tsx - file identical-byte, KHÔNG được sửa). */
+.region {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-7) var(--space-5);
+    min-height: 220px;
+    text-align: center;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-default);
+    /* R3: vùng kết quả THAY CHỖ cho bảng, nên phải nổi đúng như bảng - cùng --shadow-small.
+       Nếu thiếu, khi đổi từ "có dữ liệu" sang "rỗng" người dùng thấy khối bị sụt xuống. */
+    box-shadow: var(--shadow-small);
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-1);
+}
+
+.iconEmpty {
+    color: var(--fg-subtle);
+}
+
+.iconDone {
+    color: var(--success-fg);
+}
+
+.iconError {
+    color: var(--danger-fg);
+}
+
+/* "Đang xây dựng" dùng màu CHỮ MỜ trung tính, KHÔNG dùng --attention-fg (vàng):
+   chưa triển khai là một trạng thái BÌNH THƯỜNG, không phải cảnh báo. Tô vàng sẽ khiến
+   người dùng tưởng có gì đó sai. */
+.iconBuilding {
+    color: var(--fg-muted);
+}
+
+.title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--fg-default);
+}
+
+.description {
+    margin: 0;
+    max-width: 46ch;
+    font-size: var(--text-md);
+    line-height: 1.5;
+    color: var(--fg-muted);
+}
+
+.action {
+    margin-top: var(--space-2);
+}
+
+/* Màn hẹp: bớt chiều cao để trạng thái rỗng không chiếm gần hết màn hình điện thoại. */
+@media (max-width: 767.98px) {
+    .region {
+        padding: var(--space-6) var(--space-4);
+        min-height: 180px;
+    }
+}

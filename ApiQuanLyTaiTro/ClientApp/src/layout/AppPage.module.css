@@ -1,0 +1,52 @@
+/* Đầu trang: tiêu đề + mô tả bên trái, hành động chính bên phải.
+   V2: hành động ở page header nay được dùng nhiều hơn (Duyệt, Đợt thu thập) nên phải có cách
+   xử lý riêng cho màn hẹp - trước đây nút bị ép cạnh tiêu đề dài và co lại rất xấu. */
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+/* Chỉ màn truyền fillAvailableHeight mới thành một mắt xích trong chuỗi chiều cao flex của
+   AppLayout. Không đặt thành mặc định: nhiều AppPage là biểu mẫu hoặc hướng dẫn dài và
+   cần để .content cuộn theo dòng chảy thông thường. */
+.fillAvailableHeight {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dùng đúng mốc mobile đã chốt của cổng (< 768px) - KHÔNG đụng mốc đổi vỏ layout.
+   Tiêu đề một hàng, hành động xuống hàng dưới và chiếm trọn bề rộng cho dễ chạm. */
+@media (max-width: 767.98px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-3);
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    /* Nội dung action tuỳ ý - chặn tràn ngang bất kể trang truyền vào cái gì. */
+    .actions > * {
+        max-width: 100%;
+    }
+
+    .actions button {
+        width: 100%;
+    }
+}

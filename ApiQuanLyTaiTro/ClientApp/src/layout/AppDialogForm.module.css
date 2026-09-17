@@ -1,0 +1,134 @@
+/* Ngữ pháp bố cục cho FORM trong hộp thoại của cổng (V1).
+   Toàn bộ nằm trong layout/cuu-sinh-vien/ (thư mục CHỈ có ở ClientApp) - KHÔNG đụng tới
+   components-ui/modal/* vì các file đó identical-byte với ClientApp2. */
+
+/* Thân form. Primer Dialog đã tự cấp padding space.3 = 16px cho phần thân; thêm 8px ở đây để
+   đạt 24px "thở" theo grammar mà không phải sửa MyModal.
+   gap 32px = khoảng cách GIỮA các nhóm (khác hẳn 16px trong nhóm - chính nhịp khác nhau này
+   mới là thứ mã hoá cấu trúc của form). */
+.body {
+    padding: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+/* Một nhóm trường. 16px giữa các trường TRONG nhóm. */
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* Nhãn nhóm: nhãn phụ, KHÔNG được cạnh tranh với tiêu đề hộp thoại. */
+.groupLabel {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+/* Vùng hành động. margin ngang ÂM một bậc --space-2 (8px) kéo đường kẻ ra sát mép phần thân của
+   Primer Dialog (16px + 8px = 24px mỗi bên; chỉ bù lại đúng padding 8px của .body).
+   KHÔNG kéo -24px: phần tràn sang TRÁI mép padding-box của vùng cuộn sẽ bị cắt, không cuộn tới
+   được (overflow:auto của Primer Dialog body).
+   U4a: phải viết `calc(-1 * var(--space-2))` chứ KHÔNG phải `-var(--space-2)` - dấu trừ đặt
+   trước var() là CSS không hợp lệ, trình duyệt bỏ nguyên khai báo mà không báo lỗi gì. Dùng
+   calc để giá trị âm này luôn bám theo đúng padding của .body ở dòng dưới.
+
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 `position: sticky` — FOOTER TRÔI KHI FORM DÀI HƠN KHUNG NHÌN (N7, lô sửa màn Tin tức)
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   ĐÃ ĐO, KHÔNG PHẢI PHỎNG ĐOÁN. Form 7 trường của TinTucPage (nhóm theo AppFormGroup) cần
+   ~1107px (348 + 304 + 214 ba nhóm, +96 gap giữa nhóm, +49 footer, +96 khung cố định header/2 lớp
+   padding — tính từ đúng token Primer + token của chính file này). Ngân sách thật của Primer
+   Dialog (`max-height: calc(100dvh - 64px)`, trừ tiếp 2 lớp padding 16+16 và 8+8):
+       desktop ~1080p (innerHeight ~900-950)  → ngân sách ~836-886px  → THIẾU ~220-270px
+       laptop  ~768p  (innerHeight ~650-680)  → ngân sách ~586-616px  → THIẾU ~490-520px
+   Thiếu tới NỬA chiều cao form ở 768p — "giảm chiều cao form" không giải được (phải cắt bằng
+   2/3 nội dung của một form vừa được nhóm lại đúng nghĩa). Nguyên nhân gốc là hình dạng của
+   `Dialog.Body` (node_modules/@primer/react): `flex-grow:1; overflow:auto` là VÙNG CUỘN DUY NHẤT,
+   và `.footer` này nằm ngay TRONG vùng đó — `MyModal.tsx` không truyền `footerButtons` cho Primer
+   nên không có vùng footer tách riêng của Primer để bám vào.
+
+   VÌ SAO STICKY, KHÔNG PHẢI ĐỔI SANG `footerButtons` CỦA PRIMER:
+   `footerButtons` là API RIÊNG của Primer (mảng `{buttonType, content, onClick,...}`), không nhận
+   `<MyButton>` tuỳ ý như 6 màn đang gọi. Đổi sang nó phải sửa CẢ `MyModal.tsx` (nhận và truyền
+   prop) LẪN 6 nơi gọi (viết lại nút theo khuôn Primer) — rủi ro cao, đổi cả hình dạng nút của
+   toàn cổng. `position: sticky` chỉ cần MỘT rule CSS ở ĐÚNG file layout của cổng (không phải file
+   identical-byte `MyModal.tsx`), không đổi JSX ở bất kỳ màn nào.
+
+   ⚠️ `background-color` LÀ BẮT BUỘC, không phải trang trí: thiếu nó, nội dung cuộn qua sẽ hiện
+   XUYÊN QUA footer (chữ chồng lên nút Lưu/Huỷ) vì mọi lớp từ `Dialog.Body` xuống tới đây đều
+   trong suốt theo thiết kế gốc của Primer (xem đoạn "không che góc bo" bên dưới).
+
+   ⚠️ KHÔNG thêm bóng đổ (`box-shadow`) dù sticky-footer thường dùng bóng để báo "còn nội dung
+   phía dưới": bóng là CSS TĨNH, sẽ hiện Ở CẢ 6 MÀN chứ không chỉ màn đang thật sự cuộn - đổi
+   hình 5 màn ngắn (CongViecTab, SimpleDanhMucTab, DotThuThapPage, AdminDuyetPage,
+   QuaTrinhCongTacSection) mà lead yêu cầu GIỮ NGUYÊN. `border-top` NGAY DƯỚI đã làm đúng việc
+   "báo ranh giới" từ trước giờ, không đổi theo scroll nên không vi phạm yêu cầu đó — giữ nguyên,
+   không nâng cấp.
+
+   ⚠️ `z-index: 1` — VỀ MẶT KỸ THUẬT KHÔNG BẮT BUỘC: `position: sticky` đã tự đưa `.footer` vào
+   lớp "positioned", mà theo thứ tự vẽ chuẩn của CSS thì phần tử positioned LUÔN vẽ ĐÈ LÊN phần tử
+   static cùng ngữ cảnh xếp chồng, bất kể z-index có khai hay không - DOM order (footer là con
+   CUỐI CÙNG) đã đủ. Khai `z-index: 1` TƯỜNG MINH chỉ để tự tài liệu hoá ý định và chống hỏng nếu
+   sau này ai thêm anh/chị em có `position` riêng vào `.body` - đúng phong cách của cổng (không
+   dựa vào hành vi ngầm định khi có thể nói thẳng ra bằng một dòng).
+
+   ⚠️ ĐÃ KIỂM GÓC BO DIALOG (border-radius: 12px, xem node_modules/@primer/react StyledDialog):
+   mép footer (sau margin âm) cách mép THẬT của dialog đúng 16px — Dialog.Body padding 16 + `.body`
+   padding 8 − 8 (margin âm của chính `.footer`) = 16 mỗi bên, TÍNH TỪ TOẠ ĐỘ THẬT chứ không suy
+   diễn. 16px > bán kính bo 12px ⇒ góc vuông của `.footer` nằm gọn trong phần THẲNG của khung, còn
+   dư đúng 4px - KHÔNG che góc bo, ở MỌI vị trí cuộn (sticky giữ nguyên đúng toạ độ này khi đang
+   dính, không đổi theo scroll). Không cần bo góc riêng cho `.footer`.
+
+   ⚠️ 5 MÀN CÒN LẠI KHÔNG ĐỔI HÌNH: dialog của chúng cao theo NỘI DUNG (`height="auto"` của Primer,
+   không có gì để "dính" khi không có phần dư để cuộn) — `position: sticky` khi không có gì để
+   dính thì render giống hệt vị trí tĩnh trước đó. */
+.footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background-color: var(--surface-default);
+    margin: 0 calc(-1 * var(--space-2)) calc(-1 * var(--space-2));
+    padding: var(--space-4) var(--space-2) 0;
+    border-top: 1px solid var(--border-default);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Màn hẹp: hai nút xếp dọc, chiếm trọn bề rộng, hành động CHÍNH nằm trên (column-reverse giữ
+   nguyên thứ tự DOM Huỷ -> Lưu để tab order không đổi). */
+@media (max-width: 479.98px) {
+    .footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: var(--space-2);
+    }
+
+    .footer > * {
+        width: 100%;
+    }
+
+    .footer button {
+        width: 100%;
+    }
+}
+
+/* Cặp trường NGẮN cùng loại (Từ năm/Đến năm, Từ ngày/Đến ngày). Chia cột theo CHÍNH bề rộng còn
+   lại của hộp thoại, KHÔNG theo viewport: hộp thoại rộng cố định theo prop width của Primer nên
+   một media query viewport không nói lên được chỗ thực tế còn bao nhiêu.
+     - thân hộp thoại large (480 - 24*2 = 432px) -> 2 cột (2*160 + 16 = 336)
+     - hộp thoại bị bó ở màn rất hẹp (tối thiểu 296px -> thân ~248px) -> tự xuống 1 cột
+   min(100%, 160px) để khung hẹp hơn 160px thì cột co theo khung thay vì tràn. */
+.fieldPair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: var(--space-4);
+}

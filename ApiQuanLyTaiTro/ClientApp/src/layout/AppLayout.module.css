@@ -1,0 +1,648 @@
+/* Font "Be Vietnam Pro" nạp bằng <link> ở public/index.html và đặt ở body trong src/index.css,
+   nên .page KHÔNG khai font-family riêng nữa - thừa hưởng thẳng từ body. */
+
+/* Toàn bộ giá trị màu/kích thước/ảnh nền bên dưới copy nguyên từ layout/Header.module.css +
+   layout/Layout.tsx + components-ui/app-button/AppButton.module.css + layout/Menu.module.css
+   (hệ học vụ cũ) - CHỈ lấy JSX/CSS/asset, không lấy Redux. Ảnh nền banner dùng lại đúng file có
+   sẵn trong public/imageStyle/aof/ (bộ ảnh mặc định "aof" mà Header.tsx cũ cũng fallback về khi
+   không tìm thấy ảnh riêng theo schoolCode). */
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 100vh;
+    /* Vùng làm việc dùng bề mặt trung tính (không gradient, không ảnh nền): nền phẳng để bảng
+       dữ liệu và các thẻ bên trong không phải cạnh tranh thị giác với nền. */
+    background-color: var(--surface-page);
+}
+
+
+/* ===== QUY TẮC TIÊU ĐỀ <h2> CỦA CỔNG (chốt ở Sprint 3) =====
+   Đặt ở đây vì đây là file layout dùng chung - mọi trang đều đi qua nó.
+
+   1. <h2> là tiêu đề MỤC CỦA TRANG  -> var(--text-xl) 20px + color fg.default, KHÔNG màu.
+      Ví dụ: hai khối của ProfilePage, QuaTrinhCongTacSection.
+   2. <h2> là tiêu đề THẺ trong danh sách lặp -> var(--text-lg) 16px, phân biệt với chữ phụ
+      bằng FONT-WEIGHT chứ không bằng cỡ chữ. Ví dụ: .title của AppMobileList.
+   3. Vùng LÀM VIỆC: tiêu đề KHÔNG dùng màu để phân cấp - chỉ cỡ chữ + weight.
+      Trang LANDING (marketing) thì ĐƯỢC dùng màu: .audienceCard h2 giữ var(--primary).
+
+   Ngoại lệ duy nhất ngoài ba điều trên: <h1> tiêu đề trang (AppPageCaption) dùng
+   var(--brand-700) - xem comment trong AppPageCaption.tsx.
+
+   Vì sao tách 1 và 2: một <h2> trong danh sách lặp KHÔNG cùng vai với tiêu đề mục của
+   trang, dù cùng thẻ. Gộp cả hai về 20px làm tiêu đề thẻ to lấn át nội dung của chính nó. */
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   HEADER ĐÃ CHUYỂN SANG AppBrandHeader.module.css (R2) — đóng nợ 51
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   Mọi rule của header (.header, .headerLeft, .headerMid, .logo, .nameProduct, .headerRight,
+   .userInfo, .userMenuAnchor, .userEmail, .userRole) đã rời khỏi file này. Trước R2 chúng bị
+   CHÉP ĐÔI sang AlumniLandingPage.module.css và 8/11 selector đã trôi khác nhau.
+   ⚠️ ĐỪNG thêm rule header mới vào đây — sẽ dựng lại đúng nợ 51.
+
+   BỐN rule Ở LẠI file này vì chúng thuộc về LAYOUT chứ không thuộc header:
+     .mobileNavToggle        - nút cắm vào prop `leading`, nhưng nó điều khiển DRAWER của layout
+     .userMenuAnchor / .userEmail / .userRole / .userInfo
+                             - cắm vào prop `actions`, nhưng chúng là MENU TÀI KHOẢN của layout;
+                               Landing không có chúng (Landing cắm nút "Đăng nhập").
+   🔴 MÀU CỦA CHÚNG ĐÃ ĐỔI THEO NỀN HEADER: header nay TRẮNG, nên chữ trắng cũ (#fff) sẽ tàng
+   hình. Xem từng rule bên dưới.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Menu tài khoản ở góc phải header. NỀN HEADER NAY LÀ TRẮNG (R2) nên toàn bộ màu đảo lại:
+   chữ #fff -> --fg-default (15.80:1), nhãn vai trò #ffecaa -> --fg-muted (5.25:1),
+   nền hover rgba(255,255,255,.15) -> --neutral-muted, viền focus #fff -> --brand-600 (6.87:1). */
+.userMenuAnchor {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    transition: background var(--transition-fast);
+}
+
+.userMenuAnchor:hover {
+    background: var(--neutral-muted);
+}
+
+.userMenuAnchor:focus-visible {
+    outline: 2px solid var(--brand-600);
+    outline-offset: 1px;
+}
+
+.userMenuAnchor svg {
+    color: var(--fg-muted);
+    flex-shrink: 0;
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    min-width: 0;
+    max-width: 260px; /* chặn email rất dài kéo giãn cả header - buộc nó tự xuống dòng thay vì tràn */
+}
+
+.userEmail {
+    color: var(--fg-default);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    overflow-wrap: break-word; /* email không có khoảng trắng vẫn xuống dòng được thay vì ép rộng */
+    word-break: break-word;
+}
+
+.userRole {
+    color: var(--fg-muted);
+    font-size: var(--text-xs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 < 1600px: NÚT TÀI KHOẢN BỎ EMAIL, GIỮ VAI TRÒ — đây là thứ cứu ngân sách header
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   ĐỌC BẢNG NGÂN SÁCH trong AppBrandHeader.module.css (ngay trên @media 1365.98px) trước khi
+   đụng khối này. Tóm tắt vì sao nó tồn tại:
+
+   Thanh điều hướng hai tầng có HAI ca `actions` bề rộng rất khác nhau, và ca rộng chính là khối
+   này:
+       khách / trang công khai : nút "Đăng nhập"                       ~110px
+       đã đăng nhập            : nút tài khoản CÓ email                ~304px   <-- ca phình
+                                 nút tài khoản BỎ email (khối này)     ~118px
+   Với thanh NĂM mục, ca "có email" cần 1527px mới đủ chỗ — tức nó tràn ở mọi laptop 15 inch.
+   Bỏ email kéo tổng về 1341px, vừa mốc 1366 đang dùng.
+
+   🔴 VÌ SAO BỎ EMAIL CHỨ KHÔNG BỎ VAI TRÒ:
+   · Email dài thì `max-width: 260px` đằng nào cũng ép nó xuống dòng/cắt — một email cắt cụt
+     không đọc ra được ai, tức 260px đổi lấy gần như không thông tin.
+   · Vai trò ("Cựu sinh viên" / "Lớp trưởng" / "Quản lý") chỉ ~78px mà trả lời đúng câu người ta
+     cần ở header: "tôi đang đăng nhập bằng quyền gì". Nhầm vai là nhầm cả màn làm việc.
+   · KHÔNG MẤT GÌ: email đầy đủ vẫn nằm trong chính menu tài khoản khi mở ra (AppLayout.tsx,
+     ActionList.Item đầu tiên), cùng chỗ với "Đăng xuất". Khối này chỉ ẩn một <span>; <button>
+     và ActionMenu KHÔNG bị đụng nên đường đăng xuất còn nguyên.
+
+   ⚠️ NGƯỠNG 1600 CHỨ KHÔNG PHẢI 1527 (con số vừa đủ): ở đúng 1527 thì biên bằng 0, mà bề rộng
+      nhãn mục là ƯỚC LƯỢNG theo ký tự (±10%). 1600 để lại ~73px biên cho ca có email.
+   ⚠️ KHỐI NÀY PHẢI ĐỨNG TRƯỚC @media(767.98px) bên dưới: hai khối đặt cùng thuộc tính, cùng độ
+      đặc hiệu, nên cái ĐỨNG SAU thắng. Ở 400px cả hai đều khớp, và giá trị đúng là của khối
+      < 768px (padding 6px chặt hơn). Đảo thứ tự là màn điện thoại rộng thêm 4px mỗi bên.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1599.98px) {
+    .userEmail {
+        display: none;
+    }
+
+    /* Không còn email thì trần 260px hết việc; để `none` cho nhãn vai trò tự quyết bề rộng. */
+    .userInfo {
+        max-width: none;
+    }
+
+    /* "Cựu sinh viên" là nhãn dài nhất — cho nó xuống dòng thì nút cao gấp đôi và lệch hàng. */
+    .userRole {
+        white-space: nowrap;
+    }
+
+    /* 12px -> 8px mỗi bên: lấy lại 8px cuối cùng, đủ đưa biên ở mốc 1366 từ 17px lên 25px. */
+    .userMenuAnchor {
+        padding: var(--space-2);
+    }
+}
+
+/* GĐ2: nút hamburger mở drawer - MẶC ĐỊNH ẨN. Chỉ bật ở @media(<768px) bên dưới.
+   Desktop >= 768px: display:none -> KHÔNG chiếm chỗ, không ảnh hưởng header. */
+.mobileNavToggle {
+    display: none;
+}
+
+/* ===== Body: rail 2 ngăn + content (copy layout/Layout.tsx) =====
+   Quyết định trình bày: vùng làm việc dùng bề mặt trung tính, phẳng - nền không được cạnh tranh
+   thị giác với dữ liệu. Gradient teal->kem, ảnh logo mờ và backdrop-filter (hiệu ứng kính mờ)
+   của bản trước đã gỡ: nền loang khiến chữ trắng của rail chỉ còn 1.22:1 ở đáy màn hình, và
+   backdrop-filter buộc trình duyệt dựng compositing layer riêng rồi blur lại mỗi khung hình khi
+   cuộn (giật rõ trên máy đời cũ). Bù lại, rail nay có nền TỐI riêng để nhãn trắng đạt 9.96:1. */
+.body {
+    flex: 1;
+    display: flex;
+    /* Flex item mặc định có min-height:auto nên sẽ phình theo nội dung, không chịu co vào phần
+       chiều cao còn lại. min-height:0 mở đường cho .content tự cuộn và vùng bảng con dùng phần
+       còn lại; thiếu mắt xích này trước đây buộc từng trang phải đo chiều cao bằng JavaScript. */
+    min-height: 0;
+}
+
+/* Ngăn 1 - rail icon vuông (copy components-ui/app-button/AppButton.module.css .container/.icon*) */
+.rail {
+    /* 🔄 80px -> 64px sau khi BỎ NHÃN CHỮ dưới icon. 80px trước đây là ngân sách cho CHỮ, không
+       cho icon: ô icon chỉ 48px + hai dải trạng thái 3px = 54px, phần dư 26px là chỗ để nhãn
+       "Quản lý tài khoản" xuống dòng cho đỡ gãy. Bỏ nhãn thì ràng buộc đó biến mất.
+       64px = 54 + 5 mỗi bên. Còn 16px trả thẳng cho `.content` - đúng vùng làm việc của bốn màn
+       `fillAvailableHeight`, nên nó bù lại gần hết 16px chiều cao mà header hai tầng vừa lấy đi
+       (mục 104). Xuống dưới 60px thì ô icon chạm mép, đừng hạ thêm. */
+    width: 64px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--space-3);
+    /* Nền tối riêng cho rail. LÝ DO GỐC (nhãn trắng .railAppName đạt 9.96:1 thay vì 1.22:1 khi
+       nằm trên gradient của .page) đã hết hiệu lực - nhãn chữ bỏ rồi. Nhưng nền tối VẪN CẦN, nay
+       cho hai thứ khác: ô icon TRẮNG phải có nền tối để đọc ra là ô, và vạch/vòng --accent-onDark
+       (#FF7BA8) được chọn đúng vì nó đạt 5.26:1 TRÊN --brand-900. Đổi nền rail là phải đo lại cả hai. */
+    background-color: var(--brand-900);
+}
+
+/* FIX #2: nút thu gọn/mở panel giữa - đỉnh rail, trên danh sách category icon.
+   Hiệu ứng hover/transition lấy ý từ ESS layout/Humberger.module.css. */
+.railToggle {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: #fff;
+    transition: background var(--transition-fast);
+}
+
+.railToggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.railToggle:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+}
+
+.railItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: var(--space-3);
+    padding: 0;
+    background: transparent;
+    border: 0;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 500;
+    color: inherit;
+    cursor: pointer;
+    /* .railItem nay là <a> (react-router <Link>) chứ không còn là <button> - phải tự bỏ gạch
+       chân mặc định của thẻ a. `color: inherit` ở trên vốn có sẵn nên màu chữ không bị màu
+       link mặc định của trình duyệt chiếm. Các rule :hover / :focus-visible bên dưới giữ
+       nguyên (đã đổi sang var(--accent-onDark) ở Sprint 1). */
+    text-decoration: none;
+    /* Mốc neo cho tooltip `::after` bên dưới. */
+    position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   TOOLTIP CỦA RAIL — TỰ DỰNG, KHÔNG DÙNG <Tooltip> CỦA PRIMER
+   ═══════════════════════════════════════════════════════════════════════════════════════════
+   🔴 LÝ DO ĐỔI, đừng "dọn cho nhất quán" về lại Primer: CSS của Primer Tooltip bật `::after` ở
+   `:hover, :active, :focus, :focus-within`. Mà BẤM CHUỘT vào một <a> thì trình duyệt GIỮ FOCUS
+   trên đó, nên `:focus-within` vẫn đúng sau khi chuột đã đi -> nhãn treo lì giữa màn hình. Lỗi
+   đã gặp thật: bấm "Thống kê", rê chuột ra chỗ khác, nhãn vẫn còn.
+
+   Ở đây dùng `:hover` + `:focus-visible`:
+     · `:hover`         -> chuột đang trỏ lên, đúng lúc cần gợi nghĩa cho icon không nhãn;
+     · `:focus-visible` -> CHỈ khớp khi focus đến từ BÀN PHÍM (trình duyệt tự phân biệt), nên
+       người đi Tab vẫn đọc được tên nhóm, còn cú bấm chuột KHÔNG kích hoạt nó.
+   Nội dung lấy từ `attr(aria-label)` - đúng chuỗi đã đặt trên <Link>, nên không có nguồn thứ hai
+   để lệch. ⚠️ Bỏ `aria-label` là mất LUÔN tooltip, không chỉ mất nhãn cho trình đọc màn hình. */
+.railItem::after {
+    content: attr(aria-label);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--brand-900);
+    color: #fff;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+    /* Nổi trên panel giữa đứng ngay bên phải rail. */
+    z-index: 5;
+    /* Không được nuốt chuột: nếu không, tooltip che mất chính icon và sinh hover nhấp nháy. */
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-fast);
+}
+
+.railItem:hover::after,
+.railItem:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 🔄 Hover TRƯỚC ĐÂY đổi màu NHÃN CHỮ (.railItem:hover .railAppName). Nhãn đã bỏ, nên phản hồi
+   rê chuột phải chuyển sang chính Ô ICON - nếu không, rail mất hẳn tín hiệu "cái này bấm được".
+   🔴 MÀU PHẢI KHÁC vòng của mục đang chọn. Bản đầu của lô này dùng ĐÚNG cùng một vòng
+   `--accent-onDark 0 0 0 2px` cho cả hover lẫn active - tức rê chuột qua một nhóm BẤT KỲ là nó
+   giả làm "nhóm bạn đang ở", đúng lúc nhãn chữ vừa bị bỏ nên không còn gì đính chính.
+   Nay hover = vòng TRẮNG MỜ (chỉ nói "bấm được"), active = vòng --accent-onDark + vạch bên trái
+   (nói "bạn đang ở đây"). Hai vai trò, hai màu. */
+.railItem:hover .railIconApp {
+    box-shadow: rgba(255, 255, 255, 0.55) 0px 0px 0px 2px;
+}
+
+/* Đang chọn thì GIỮ vòng cam kể cả khi rê chuột - nếu không, hover sẽ xoá mất tín hiệu định vị
+   duy nhất còn lại trên ô icon. Đặt SAU rule hover để thắng ở cùng độ đặc hiệu. */
+.railItem:hover .railIconAppActive {
+    box-shadow: var(--accent-onDark) 0px 0px 0px 2px;
+}
+
+/* outline-offset ÂM (vẽ vào TRONG) chứ không phải +2px như bản cũ: rail nay chỉ 64px và
+   .railItem rộng 100%, nên vòng focus vẽ ra ngoài sẽ tràn sang mép `.content`. */
+.railItem:focus-visible {
+    outline: 2px solid var(--accent-onDark);
+    outline-offset: -2px;
+    border-radius: var(--radius-md);
+}
+
+.railIcon {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.railIconState {
+    width: 3px;
+}
+
+.railActiveState {
+    background-color: var(--accent-onDark);
+    height: 32px;
+    border-radius: var(--radius-sm);
+}
+
+.railIconImage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.railIconApp {
+    background-color: #fff;
+    height: 48px;
+    width: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+    box-shadow: 0 0 0 1px var(--border-default);
+    transition: box-shadow var(--transition-base);
+}
+
+/* Vòng cam CHỈ khi category đang được chọn (FIX #3 + phát hiện #7 - trước đây luôn hiện). */
+.railIconAppActive {
+    box-shadow: var(--accent-onDark) 0px 0px 0px 2px;
+}
+
+/* N3 (trả nợ 64): icon rail nay là SVG octicon, không còn là <img> PNG.
+   `fill: currentColor` để nó ăn màu chữ của rail (trắng trên nền tối) - PNG cũ mang màu cứng
+   trong file nên đổi nền rail là phải sửa ảnh.
+   Giữ `img` trong selector: chưa xoá 6 PNG cũ, và nếu ai lỡ đặt lại một <img> thì nó vẫn đúng cỡ. */
+.railIconApp img,
+.railIconApp svg {
+    width: 32px;
+    height: 32px;
+}
+
+.railIconApp svg {
+    fill: currentColor;
+}
+
+/* 🔄 `.railAppName` (nhãn chữ dưới icon) ĐÃ GỠ. Lead chốt: panel giữa đã mang tên chi tiết của
+   từng chức năng nên nhãn dưới icon là thừa. Thay thế KHÔNG phải "không có gì":
+     · chuột            -> <Tooltip text={label}> bọc mỗi .railItem (khuôn nhà, xem Button.tsx);
+     · trình đọc màn hình -> aria-label trên chính <Link>;
+     · định vị nhóm đang chọn -> vạch .railActiveState + vòng .railIconAppActive (cả hai GIỮ).
+   ⚠️ Bỏ nhãn NHÌN THẤY được mà bỏ luôn nhãn NGHE được là biến rail thành N liên kết không tên.
+      Ba thứ trên phải đi cùng nhau; gỡ một cái là hỏng một nhóm người dùng. */
+
+/* Ngăn 2 - panel menu (copy layout/Menu.tsx + Menu.module.css).
+   FIX #2 (Option A): panel ẩn/hiện bằng conditional render trong AppLayout.tsx - KHÔNG
+   còn width:0 + transition. Khi ẩn, panel biến mất hẳn khỏi DOM nên flex chỉ còn rail+content
+   -> .content lấp đầy chỗ trống, không nhập nhằng như cách set width:0 cũ. */
+.panel {
+    width: 205px;
+    flex-shrink: 0;
+    /* Panel mang MÀU THƯƠNG HIỆU (bậc nhạt nhất), không còn xám trung tính: màu nằm ở KHUNG,
+       mặt bàn dữ liệu (.content) vẫn trắng. Chênh lệch với .content nay ΔE2000 = 4.32 (trước
+       là 1.91, dưới ngưỡng JND ~2.3) - tức hai vùng đã TỰ phân biệt được bằng màu.
+       border-right giữ lại như một đường viền có chủ đích, KHÔNG còn là thứ duy nhất tách hai
+       vùng như trước (xem docs/ui-no-ky-thuat.md mục 7 đã cập nhật). */
+    background-color: var(--brand-050);
+    border-right: 1px solid var(--border-default);
+}
+
+/* TÊN CỔNG ở đỉnh panel - thêm ở R2 khi header nhường chỗ cho thương hiệu nhà cung cấp.
+   Vai trò: "mình đang ở hệ thống nào". Nó TĨNH (không đổi theo màn), khác .panelTitle ngay
+   dưới vốn đổi theo nhóm đang chọn ở rail.
+   MÀU: --fg-default trên nền panel --brand-050 = 14.33:1. Cố ý dùng màu TRUNG TÍNH chứ không
+   phải màu thương hiệu - .panelTitle ngay dưới đã mang màu thương hiệu, hai khối chữ cùng màu
+   xanh cạnh nhau sẽ không phân biệt được cái nào là danh tính, cái nào là ngữ cảnh đang chọn.
+   Chuỗi 28 ký tự @12px/700 ~ 208px, mà panel rộng 205px - 32px padding = 173px => XUỐNG 2 DÒNG.
+   Đó là dự kiến, không phải lỗi: hai dòng ở đây vẫn gọn hơn là cắt cụt danh tính bằng ba chấm. */
+.panelAppName {
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--border-default);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--fg-default);
+}
+
+.panelTitle {
+    padding: var(--space-3) var(--space-4) var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--primary);
+}
+
+.panel nav {
+    border-bottom: 0px;
+}
+
+.panel nav a {
+    transition: background var(--transition-fast);
+}
+
+/* Hover tường minh cho mục menu - KHÔNG dựa vào mặc định của Primer (nó có thể đổi theo bản
+   nâng cấp, và nền panel nay là bề mặt phụ chứ không còn là trắng).
+   Giá trị đặt THẲNG, không tạo token: đây là alpha riêng cho đúng một trạng thái hover trên
+   đúng một bề mặt, không phải một bậc trong thang màu.
+   Vì sao 0.45 chứ không phải --neutral-muted (alpha 0.20): 0.20 cho ΔE2000 = 2.90 so với nền
+   panel, chỉ vừa qua ngưỡng JND ~2.3 - quá mỏng cho một mục người ta rê qua trong nửa giây.
+   0.45 cho ΔE2000 = 6.57. (Tỉ lệ tương phản là thước đo cho CHỮ, không dùng để đánh giá hai
+   mảng màu lớn kề nhau; ở đây dùng ΔE2000 - ΔE76 phóng đại khác biệt ở vùng màu sáng.) */
+.panel nav a:hover {
+    background-color: rgba(175, 184, 193, 0.45);
+}
+
+.panel nav a[aria-current="page"],
+.panel nav [aria-current="page"] {
+    border: 2px solid var(--primary) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    /* Cho phép flex item co xuống dưới chiều cao nội dung nội tại. Giữ overflow:auto để các trang
+       biểu mẫu/hướng dẫn dài vẫn cuộn được, không bị cắt bởi chuỗi flex của các màn bảng. */
+    min-height: 0;
+    overflow: auto;
+    /* ═══════════════════════════════════════════════════════════════════════════════════
+       R3: TRẮNG -> --surface-page. Đây là thay đổi nền của MỌI màn, đọc kỹ trước khi đảo lại.
+       ═══════════════════════════════════════════════════════════════════════════════════
+       VÌ SAO: trước R3 mọi thứ đều trắng - .content trắng, thẻ trắng, bảng trắng - nên khối
+       nội dung chỉ tách khỏi nền bằng một đường viền 1px. Đó chính là "trắng đơn điệu".
+       Nay nền lùi một bậc, thẻ/bảng giữ trắng + --shadow-small => chúng NỔI LÊN thật sự.
+
+       VÌ SAO --surface-page CHỨ KHÔNG PHẢI --surface-subtle:
+       (a) --surface-subtle đang là bậc "chìm" của 19 khối bên trong thẻ; lấy nó làm nền thì
+           chìm và nổi cùng một màu, hỏng cả 19 chỗ (chênh nhau đúng 1.02 lần).
+       (b) --surface-page vốn khai cho .page - mà .page bị header + .body phủ kín nên màu đó
+           CHƯA BAO GIỜ NHÌN THẤY ĐƯỢC. Chuyển xuống đây là lần đầu nó làm đúng tên của nó.
+
+       ⚠️ Chữ đặt TRỰC TIẾP lên nền này phải là --fg-default (14.48) hoặc --fg-muted (4.81).
+       --fg-subtle chỉ đạt 4.17 - TRƯỢT AA, chỉ dùng được bên trong thẻ trắng.
+       ═══════════════════════════════════════════════════════════════════════════════════ */
+    background-color: var(--surface-page);
+    padding: var(--space-5);
+    transition: background var(--transition-fast);
+}
+
+/* Căn DỌC giữa cho mọi ô của mọi bảng trong vùng làm việc.
+   NGUYÊN NHÂN: giá trị mặc định của `vertical-align` là `baseline`, và UA stylesheet của
+   HTML KHÔNG đổi nó cho <td>. Nên trong một hàng, ô 1 dòng căn baseline của nó theo baseline
+   DÒNG ĐẦU của ô 3 dòng -> nó bị dính lên đỉnh hàng, tạo cảm giác so le. Chiều cao hàng do ô
+   cao nhất quyết định, nên ô ngắn càng lệch rõ. Đây đúng là lỗi nhìn thấy được ở review.
+   Cell.tsx (VÙNG CẤM) không đặt vertical-align nên phải sửa từ tầng trang.
+   KHÔNG cần !important: Cell.tsx không đặt thuộc tính này bằng inline style (đã kiểm), rule
+   thường thắng UA stylesheet. Chỉ cần !important nếu sau này Cell.tsx thêm inline style.
+   Đặt ở ĐÚNG MỘT chỗ thay vì rải theo từng trang: mọi bảng của cổng đều nằm trong .content.
+   RIÊNG bảng trong AppWorkflowDialog render qua PORTAL (ngoài .content) nên khai riêng -
+   xem ImportDanhSachPage.module.css. */
+.content :global(table) tbody td {
+    vertical-align: middle;
+}
+
+/* ===== Drawer điều hướng mobile (Giai đoạn 2) =====
+   Render CÓ ĐIỀU KIỆN (isMobile && isDrawerOpen) trong AppLayout.tsx -> desktop không dựng.
+   Tự dựng overlay full màn hình (Primer không có sẵn Drawer), giống phong cách "tự tay dựng"
+   của layout này. Không animation ở GĐ2 (giảm rủi ro) - có thể thêm ở GĐ4 polish. */
+.drawerOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000; /* trên header (z-index:100) + nội dung; dưới Primer portal (1600) + toast */
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.drawerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-4);
+    background-color: var(--primary);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.drawerTitle {
+    font-weight: 700;
+    font-size: var(--text-md);
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.drawerClose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-md);
+    color: #fff;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.drawerClose:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.drawerClose:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+}
+
+.drawerNav {
+    padding: var(--space-2) 0;
+}
+
+/* Primer NavList.Item uses a 32px minimum row by default. In the mobile drawer,
+   make each semantic navigation link meet the 44px touch-target minimum. */
+.drawerNav nav a[href] {
+    min-height: 44px;
+    align-items: center;
+}
+
+/* Mục đang ở trang hiện tại - viền giống panel desktop (.panel nav [aria-current]). */
+.drawerNav nav a[aria-current="page"],
+.drawerNav nav [aria-current="page"] {
+    border: 2px solid var(--primary) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+/* Khối @media (max-width: 1023.98px) ĐÃ CHUYỂN sang AppBrandHeader.module.css (R2).
+   Nó làm HAI việc: (a) ẩn .headerLeft - nay .headerLeft đã bị xoá hẳn nên việc này biến mất;
+   (b) hạ bậc cỡ chữ tiêu đề - việc này VẪN CẦN và đã theo header sang file mới, kèm ngân sách
+   bề rộng tính LẠI cho trường hợp không còn .headerLeft. Xem mục 48. */
+
+/* ===== Điện thoại (< 768px) - Giai đoạn 2: ĐỔI VỎ layout.
+   Rail + panel bị ẩn HẲN (display:none - đơn giản & ít rủi ro hơn bỏ render ở JSX cho phần
+   mobile-only). Điều hướng chuyển sang hamburger ở header -> drawer toàn màn hình (ở trên).
+   Mốc 767.98px = "< 768px" đã chốt, nhất quán với @media của AlumniLandingPage (Giai đoạn 1).
+   Desktop >= 768px: KHÔNG rule nào ở đây áp vào -> rail 4 icon (FIX #3) + panel-collapse
+   (FIX #2) + active-highlight theo URL giữ nguyên 100%.
+   (Thay cho block @media(max-width:768px) của Giai đoạn 6 - Giai đoạn 6 chỉ co kích thước
+   rail/panel, nay ẩn hẳn nên các rule co kích thước đó không còn ý nghĩa.) ===== */
+@media (max-width: 767.98px) {
+    .rail,
+    .panel {
+        display: none;
+    }
+
+    .mobileNavToggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        margin-left: 8px;
+        flex-shrink: 0;
+        align-self: center;
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        /* Nền header nay TRẮNG (R2) nên icon phải là màu chữ, không phải trắng. */
+        color: var(--fg-default);
+        cursor: pointer;
+        transition: background var(--transition-fast);
+    }
+
+    .mobileNavToggle:hover {
+        background: var(--neutral-muted);
+    }
+
+    .mobileNavToggle:focus-visible {
+        outline: 2px solid var(--brand-600);
+        outline-offset: 1px;
+    }
+
+    /* Mọi rule HEADER ở điện thoại (.header, .logo, .nameProduct, .headerRight) ĐÃ CHUYỂN sang
+       AppBrandHeader.module.css (R2) cùng nguyên văn khối chú thích về lỗi "header cao 646px".
+       Ở lại đây chỉ còn thứ thuộc MENU TÀI KHOẢN của layout. */
+    .userInfo {
+        max-width: none;
+    }
+
+    .userEmail {
+        display: none;
+    }
+
+    .userRole {
+        white-space: nowrap;
+    }
+
+    .userMenuAnchor {
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .content {
+        padding: 16px;
+    }
+}
+
+/* Màn RẤT hẹp: bỏ nốt nhãn vai trò cạnh nút tài khoản.
+   Mốc 374.98px không phải chọn bừa - đo thật ở runtime: dòng thương hiệu cần 151px; từ 375px trở
+   lên nó vừa đủ chỗ dù vẫn hiện nhãn vai trò, còn ở 320px ô tiêu đề chỉ còn 96-129px (rộng hẹp
+   tuỳ độ dài nhãn vai trò: "Cựu sinh viên" dài nhất nên chật nhất) nên tên trường bị cắt cụt.
+   Giấu nhãn vai trò trả lại ~78px, vừa đủ để tên trường hiện trọn.
+   Vai trò + email đầy đủ vẫn nằm trong menu tài khoản, và NÚT tài khoản thì không đổi. */
+@media (max-width: 374.98px) {
+    .userRole {
+        display: none;
+    }
+}

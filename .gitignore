@@ -1,0 +1,129 @@
+﻿################################################################################
+# .gitignore chuẩn cho Visual Studio / .NET Core / ASP.NET Core
+# Dự án: QuanLyTaiTro – ApiQuanLyTaiTro (.NET 8)
+################################################################################
+
+# ── Build Output ──────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+out/
+publish/
+
+# ── Visual Studio ─────────────────────────────────────────────────────────────
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.lscache
+*.csproj.user
+*.ncb
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.VC.opendb
+
+# ── Rider / JetBrains ─────────────────────────────────────────────────────────
+.idea/
+*.DotSettings.user
+
+# ── VS Code ───────────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ── NuGet ─────────────────────────────────────────────────────────────────────
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+nuget.dgspec.json
+
+# ── .NET CLI ──────────────────────────────────────────────────────────────────
+project.assets.json
+.dotnet/
+
+# ── Test Results ──────────────────────────────────────────────────────────────
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings
+
+# ── ASP.NET Core specifics ────────────────────────────────────────────────────
+# Publish profiles
+Properties/PublishProfiles/
+**/Properties/PublishProfiles/
+
+# App secrets (KHÔNG COMMIT secret)
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.json
+appsettings.Development.json
+secrets.json
+
+# ── Node / SPA (nếu có ClientApp) ────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+dist/
+build/
+.next/
+
+# ── Assets tải lên (thư mục chứa file user upload – không commit) ─────────────
+ApiQuanLyCuuSinhVien/Assets/Upload/*
+!ApiQuanLyCuuSinhVien/Assets/Upload/.gitkeep
+
+# ── OS specifics ──────────────────────────────────────────────────────────────
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+# ── Editor backup ─────────────────────────────────────────────────────────────
+*.bak
+*.swp
+*.tmp
+*.orig
+
+# ── AI / Agent tools ──────────────────────────────────────────────────────────
+.agents/
+skills-lock.json
+.mcp.json
+.claude
+.codegraph
+.cursor
+CLAUDE.md
+
+# ── Script/tài liệu dựng project (đồ nghề nội bộ – không đẩy lên repo) ─────────
+scaffold.sh
+scaffold.ps1
+sync_from_markman.sh
+clean_models.sh
+summary.md
+UpgradeLog.htm
+!appsettings.Example.json

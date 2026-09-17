@@ -1,0 +1,21 @@
+.input {
+    min-height: 32px;
+    color: #1F2328;
+    background-color: #ffffff;
+}
+
+.input:focus-within {
+    border-color: var(--primary);
+    outline: var(--primary) solid 2px;
+    outline-offset: -1px;
+}
+
+.input input[type="number"]::-webkit-outer-spin-button,
+.input input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input input[type="number"] {
+    -moz-appearance: textfield;
+}

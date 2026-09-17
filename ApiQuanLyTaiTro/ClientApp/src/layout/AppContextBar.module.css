@@ -1,0 +1,58 @@
+/* Tầng NGỮ CẢNH giữa tiêu đề trang và vùng kết quả (V2).
+   Nhiệm vụ duy nhất: nói cho người dùng biết họ đang xem TẬP DỮ LIỆU NÀO và bao nhiêu bản ghi.
+   Phải NHẸ hơn tiêu đề trang về mặt thị giác - đây là ngữ cảnh, không phải tiêu đề. */
+.bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    min-height: 32px;
+}
+
+.context {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    min-width: 0;
+    font-size: var(--text-md);
+    line-height: 1.5;
+    color: var(--fg-muted);
+}
+
+/* Con số/tên tập dữ liệu - phần duy nhất được nhấn, vẫn nhỏ hơn tiêu đề trang (24px).
+   R3: --fg-default -> --accent-crimson (6.93:1 trên nền .content mới, thừa AA).
+   VÌ SAO ĐÂY: con số này trả lời đúng câu người dùng mở màn để hỏi - "có bao nhiêu bản ghi".
+   Nó là dữ liệu, không phải nhãn, nên đáng được màu nhấn; và đây là chỗ dùng crimson mà màu
+   KHÔNG phải tín hiệu duy nhất - nó vốn đã đậm hơn, là chữ số, và luôn đi kèm danh từ
+   ("24 tài khoản chờ duyệt"). Người không phân biệt màu vẫn đọc được đủ nghĩa. */
+.count {
+    font-weight: 600;
+    color: var(--accent-crimson);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+/* Màn hẹp: ngữ cảnh trên, điều khiển dưới và chiếm trọn bề rộng cho dễ chạm. */
+@media (max-width: 767.98px) {
+    .bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-2);
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions button {
+        width: 100%;
+    }
+}

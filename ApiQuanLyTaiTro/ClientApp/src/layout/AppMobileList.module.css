@@ -1,0 +1,149 @@
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.card {
+    height: auto;
+}
+
+.cardContent {
+    padding: var(--space-4);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.headingContent {
+    min-width: 0;
+    width: 100%;
+}
+
+.selectionControl {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-2)) calc(-1 * var(--space-3));
+    cursor: pointer;
+}
+
+.selectionControl input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.title {
+    margin: 0;
+    color: var(--fg-default);
+    /* --text-lg (16px), KHÔNG phải --text-xl: đây là tiêu đề THẺ trong danh sách lặp, không
+       phải tiêu đề MỤC CỦA TRANG (xem quy tắc <h2> ở AppLayout.module.css). Tách khỏi
+       .subtitle bằng font-weight 700 vs 400 chứ không bằng cỡ chữ. */
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.subtitle {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--fg-muted);
+    font-size: var(--text-md);
+    line-height: 1.4;
+}
+
+.subtitle strong {
+    color: var(--fg-default);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: var(--space-4) 0 0;
+    padding: var(--space-4) 0 0;
+    border-top: 1px solid var(--border-default);
+}
+
+.detail {
+    display: grid;
+    grid-template-columns: minmax(104px, 40%) minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+}
+
+.detail dt {
+    color: var(--fg-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+}
+
+.detail dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--fg-default);
+    font-size: var(--text-md);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.expandButton,
+.loadMoreButton {
+    min-height: 44px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-default);
+    color: var(--accent-fg);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+}
+
+.expandButton {
+    width: 100%;
+    margin-top: var(--space-4);
+}
+
+.loadMoreButton {
+    width: 100%;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-default);
+}
+
+.actions :global(button) {
+    min-height: 44px;
+}
+
+.expandButton:hover,
+.loadMoreButton:hover {
+    background: var(--surface-subtle);
+}
+
+.expandButton:focus-visible,
+.loadMoreButton:focus-visible {
+    outline: 2px solid var(--accent-emphasis);
+    outline-offset: 2px;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-6) var(--space-4);
+}

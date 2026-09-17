@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ApiQuanLyTaiTro/ApiQuanLyTaiTro.csproj" />
+  <Project Path="Models/Models.csproj" />
+</Solution>

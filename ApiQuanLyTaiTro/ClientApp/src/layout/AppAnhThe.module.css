@@ -1,0 +1,65 @@
+/* Tách từ ProfilePage.module.css ở N9 (dùng chung màn Hồ sơ + modal chi tiết Cựu SV).
+   width/height KHÔNG khai ở đây - component truyền qua `style` (prop, khác nhau theo màn dùng),
+   nên hai rule đó CHỦ Ý vắng mặt, không phải quên. */
+
+/* 🔴 KHUNG ẢNH LUÔN CHIẾM CHỖ, KỂ CẢ KHI KHÔNG CÓ ẢNH — ĐỪNG "TỐI ƯU" BẰNG CÁCH ẨN NÓ ĐI.
+   Khảo sát cũ ước tính chỉ ~2% hồ sơ có ảnh (chưa đo lại - xem ui-no-ky-thuat.md A6.5), nên
+   TRẠNG THÁI RỖNG MỚI LÀ TRẠNG THÁI THƯỜNG GẶP. Nếu khung biến mất khi không có ảnh thì bố cục
+   nơi gọi sẽ nhảy giữa hai hình dạng tuỳ theo dữ liệu của từng người, và chiều cao khối chứa nó
+   cũng nhảy theo. Chiếm chỗ cố định làm cả hai vấn đề biến mất.
+
+   Dùng width + height CỐ ĐỊNH (qua prop/style của component) chứ không phải `aspect-ratio`: tỉ
+   lệ 3:4 của ảnh thẻ là hằng số, không cần tính, và tránh phụ thuộc một thuộc tính CSS mới hơn
+   browserslist của dự án (">0.2%, not dead"). */
+.khung {
+    position: relative;
+    flex: 0 0 auto;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    /* Nền của ô rỗng. --brand-050 chứ không phải xám: ô rỗng phải đọc ra "chỗ dành cho ảnh, cố
+       ý để trống" - một mảng xám nhạt trên nền chìm trông đúng như ảnh hỏng. */
+    background-color: var(--brand-050);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Chữ cái đầu của TÊN (từ cuối trong họ tên) - xem layChuCaiDauTen() trong AppAnhThe.tsx.
+   aria-hidden ở TSX: đây là trang trí, họ tên đã nằm ở nơi khác trong cùng khối, đọc lại một chữ
+   cái rời cho người dùng trình đọc màn hình là nhiễu chứ không phải thông tin.
+   font-size truyền qua `style` (tỉ lệ với height của .khung) - xem TSDoc ở AppAnhThe.tsx. */
+.chuCai {
+    font-weight: 600;
+    line-height: 1;
+    color: var(--brand-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ảnh PHỦ LÊN chữ cái, không thay thế nó.
+   Vì sao xếp chồng chứ không phải render cái này HOẶC cái kia: nó xử lý luôn ca "ảnh tải chậm".
+   Trong lúc chờ mạng, người dùng thấy ô rỗng đã thiết kế sẵn - không phải một ô trắng nhấp nháy.
+   Ảnh chỉ hiện khi onLoad đã chạy (.anhHien), nên không bao giờ lộ khung ảnh đang tải dở. */
+.anh {
+    position: absolute;
+    /* top/left + width/height thay vì `inset: 0` - cùng một lý do đã bỏ `aspect-ratio` ở .khung:
+       browserslist production của dự án là ">0.2%, not dead", rộng hơn mức bảo đảm của hai
+       thuộc tính đó. Ở đây bốn dòng cũ cho kết quả y hệt, nên không có gì phải đánh đổi. */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* cover chứ không phải contain: ảnh thẻ đúng chuẩn là 3:4 nên không bị cắt; ảnh lệch chuẩn
+       thì thà cắt mép còn hơn để hai dải trống hai bên, vốn trông y như lỗi bố cục. */
+    object-fit: cover;
+    opacity: 0;
+    /* --transition-fast ĐÃ GỒM easing ("120ms ease") - đừng thêm `ease` phía sau, thành
+       "120ms ease ease" là rule hỏng và trình duyệt bỏ qua cả dòng, không báo gì. */
+    transition: opacity var(--transition-fast);
+}
+
+.anhHien {
+    opacity: 1;
+}

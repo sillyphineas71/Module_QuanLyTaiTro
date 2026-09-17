@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi" style="font-size: 13px;">
+
+<head>
+  <meta charset="utf-8" />
+  <!-- <link rel="icon" href="%PUBLIC_URL%/favicon.ico" /> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Be Vietnam Pro - nạp bằng <link>, ĐẶT TRƯỚC mọi stylesheet khác để trình duyệt bắt đầu
+       tải font sớm nhất. preconnect mở sẵn kết nối tới 2 host của Google Fonts (css2 trả CSS,
+       gstatic trả file font) nên tiết kiệm một vòng DNS+TLS.
+       5 weight = đúng những weight repo đang dùng: 400, 500, 600, 700, 800. KHÔNG gộp 800 về
+       700 vì .nameProduct đang dùng cặp 800/700 trên hai dòng liền nhau để phân cấp. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+
+  <!-- R6: #007583 (teal Học viện Tài chính) -> #0050D0. Đây là màu thanh địa chỉ trình duyệt
+       trên Android/Chrome - NGƯỜI DÙNG NHÌN THẤY, và nó nằm NGOÀI src/ nên lô đổi token R1
+       (chỉ quét src/) đã bỏ sót. -->
+  <meta name="theme-color" content="#0050D0" />
+  <!-- R6: đây là CHUỖI "Học viện Tài chính" CUỐI CÙNG còn sống trong sản phẩm. Nó không hiện
+       trên trang mà hiện ở KẾT QUẢ TÌM KIẾM và ô xem trước khi chia sẻ link - tức chỗ người
+       ngoài nhìn thấy đầu tiên. Nằm ngoài src/ nên mọi lô trước đều grep hụt. -->
+  <meta name="description" content="Cổng vận động tài trợ - Khoa Toán - Cơ - Tin học, Trường Đại học Khoa học Tự nhiên. Công khai chương trình tài trợ, tiến độ quyên góp, danh sách nhà tài trợ và khoản chi kèm minh chứng." />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+   <link rel="icon" href="%PUBLIC_URL%/logo192.png" type="image/x-icon">
+  <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+  <title>Cổng Vận động tài trợ</title>
+</head>
+
+<body>
+  <noscript>Cần bật JavaScript để sử dụng Cổng Vận động tài trợ.</noscript>
+    <div id="root">
+      <div style="display: flex;align-items: center;justify-content: center;width: 100%;height: 100vh;">
+        <div class="loadingio-spinner-spinner-arhawutjjk">
+          <div class="ldio-g19yho08djc">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+      <style type="text/css">
+        @keyframes ldio-g19yho08djc {
+          0% {
+            opacity: 1
+          }
+
+          100% {
+            opacity: 0
+          }
+        }
+
+        .ldio-g19yho08djc div {
+          left: 96px;
+          top: 62px;
+          position: absolute;
+          animation: ldio-g19yho08djc linear 1s infinite;
+          background: #fe718d;
+          width: 8px;
+          height: 24px;
+          border-radius: 4px / 6.96px;
+          transform-origin: 4px 38px;
+        }
+
+        .ldio-g19yho08djc div:nth-child(1) {
+          transform: rotate(0deg);
+          animation-delay: -0.9166666666666666s;
+          background: #fe718d;
+        }
+
+        .ldio-g19yho08djc div:nth-child(2) {
+          transform: rotate(30deg);
+          animation-delay: -0.8333333333333334s;
+          background: #f47e60;
+        }
+
+        .ldio-g19yho08djc div:nth-child(3) {
+          transform: rotate(60deg);
+          animation-delay: -0.75s;
+          background: #f8b26a;
+        }
+
+        .ldio-g19yho08djc div:nth-child(4) {
+          transform: rotate(90deg);
+          animation-delay: -0.6666666666666666s;
+          background: #abbd81;
+        }
+
+        .ldio-g19yho08djc div:nth-child(5) {
+          transform: rotate(120deg);
+          animation-delay: -0.5833333333333334s;
+          background: #849b87;
+        }
+
+        .ldio-g19yho08djc div:nth-child(6) {
+          transform: rotate(150deg);
+          animation-delay: -0.5s;
+          background: #6492ac;
+        }
+
+        .ldio-g19yho08djc div:nth-child(7) {
+          transform: rotate(180deg);
+          animation-delay: -0.4166666666666667s;
+          background: #637cb5;
+        }
+
+        .ldio-g19yho08djc div:nth-child(8) {
+          transform: rotate(210deg);
+          animation-delay: -0.3333333333333333s;
+          background: #6a63b6;
+        }
+
+        .ldio-g19yho08djc div:nth-child(9) {
+          transform: rotate(240deg);
+          animation-delay: -0.25s;
+          background: #fe718d;
+        }
+
+        .ldio-g19yho08djc div:nth-child(10) {
+          transform: rotate(270deg);
+          animation-delay: -0.16666666666666666s;
+          background: #f47e60;
+        }
+
+        .ldio-g19yho08djc div:nth-child(11) {
+          transform: rotate(300deg);
+          animation-delay: -0.08333333333333333s;
+          background: #f8b26a;
+        }
+
+        .ldio-g19yho08djc div:nth-child(12) {
+          transform: rotate(330deg);
+          animation-delay: 0s;
+          background: #abbd81;
+        }
+
+        .loadingio-spinner-spinner-arhawutjjk {
+          width: 200px;
+          height: 200px;
+          display: inline-block;
+          overflow: hidden;
+          background: #ffffff;
+        }
+
+        .ldio-g19yho08djc {
+          width: 100%;
+          height: 100%;
+          position: relative;
+          transform: translateZ(0) scale(1);
+          backface-visibility: hidden;
+          transform-origin: 0 0;
+          /* see note above */
+        }
+
+        .ldio-g19yho08djc div {
+          box-sizing: content-box;
+        }
+
+        /* generated by https://loading.io/ */
+
+      </style>
+    </div>
+
+  <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+</body>
+
+</html>

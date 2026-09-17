@@ -1,0 +1,26 @@
+/* V6: mở rộng VÙNG CHẠM của nút kebab mà KHÔNG làm cao dòng.
+   IconButton size="small" của Primer chỉ 28px - quá nhỏ để chạm chắc trên điện thoại.
+   ::after trong suốt phủ rộng ra ngoài nút: vùng bấm đạt 40px (desktop) / 44px (mobile) trong khi
+   hình vẽ kebab vẫn nhỏ gọn và chiều cao dòng của bảng/danh sách KHÔNG đổi - mật độ bảng của V2
+   giữ nguyên. Class đặt trực tiếp lên nút để ActionMenu vẫn clone được aria-* vào đúng nút đó. */
+.trigger {
+    position: relative;
+}
+
+.trigger::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
+}
+
+/* Dòng trên mobile cao tối thiểu 52px (AppCompactList) nên 44px không chồng sang dòng kế bên. */
+@media (max-width: 767.98px) {
+    .trigger::after {
+        width: 44px;
+        height: 44px;
+    }
+}
