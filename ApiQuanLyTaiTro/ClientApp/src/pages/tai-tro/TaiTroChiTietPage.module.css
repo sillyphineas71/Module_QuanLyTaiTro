@@ -8,7 +8,10 @@
    hàng 3 có một BẢNG 8 cột sàn 830px nằm ở cột 61%. Với trần 1100 thì cột đó chỉ được
    (1100-16)x0.61 = 661px ⇒ bảng cuộn ngang ở MỌI bề rộng màn hình. 1440 cho 869px ⇒ vừa.
    Trang danh sách không có bảng nào nên giữ 1100 cho dòng chữ dễ đọc. Hai trần khác nhau là
-   CÓ CHỦ ĐÍCH. */
+   CÓ CHỦ ĐÍCH.
+   🔄 Các con số trên thuộc thời sàn 830px và là tính tay. Đo thật: cột trái 61% chỉ cho khung bảng
+      736–769px (không phải 839–869). Hàng 3 nay hai cột như mẫu, bảng 6 cột sàn 698px — xem khối .hang3.
+   ⚠️ Nâng trần 1440 là cách DUY NHẤT để có thêm cột mà giữ bố cục mẫu — quyết định bố cục, nợ N18. */
 .trang {
     width: 100%;
     max-width: 1440px;
@@ -393,33 +396,43 @@
 .fillDa { background: var(--brand-600); }
 
 /* ══ HÀNG 3 ══════════════════════════════════════════════════════════════════════════════
-   🔴 HAI CỘT CHỈ TỪ 1400px TRỞ LÊN — mốc này do SÀN BẢNG quyết định, không phải thẩm mỹ.
+   🔴 HAI CỘT 61/39 THEO MẪU SẾP — TRÁI: Danh sách nhà tài trợ · PHẢI: Chi phí đã chi (trên) +
+   Thông tin chương trình (dưới). Từ 1400px trở lên; dưới 1400px xếp dọc (khối @media cuối file).
+   🔴 BỐ CỤC LÀ RÀNG BUỘC, CỘT LÀ THỨ ĐIỀU CHỈNH. Bảng tràn thì cắt cột, KHÔNG đổi bố cục.
 
-   ⚠️⚠️ SÀN ĐÃ ĐỔI 830 -> 1145px: sáu cột được nới cho hết "..." (bảng đo ở TaiTroChiTietPage.tsx).
-   Lead chốt: KHÔNG nới khung trang, KHÔNG đổi tỉ lệ 61/39, KHÔNG rút cột khác — chấp nhận bảng
-   cuộn ngang. Vì thế bảng KHÔNG còn vừa cột trái ở BẤT KỲ mốc nào của chế độ hai cột, và đó là
-   TRẠNG THÁI ĐƯỢC DUYỆT, không phải nợ kỹ thuật:
+   🔄 ĐÃ ĐẢO CÙNG NGÀY (2026-09-17): "đường 2" — hàng 3 MỘT cột ở mọi bề rộng, bảng trọn bề rộng —
+      đã làm rồi TRẢ LẠI, vì nó đổi bố cục khỏi mẫu sếp yêu cầu. Lập luận của nó ("cột trái 61% chỉ
+      736–769px, sàn 1058 không vừa") ĐÚNG về số đo, SAI về chỗ đặt ràng buộc.
 
-       @1920 : trang 1440 -> cột trái (1440-16)x0.61 = 868px  → cuộn ngang 277px
-       @1600 : trang 1552 -> cột trái  937px                  → cuộn ngang 208px
-       @1440 : trang 1392 -> cột trái  839px                  → cuộn ngang 306px
-       @1366 : xếp DỌC (dưới mốc 1400) -> bảng nhận trọn 1318px  ✅ KHÔNG cuộn (dư 173px)
-       @1200 : xếp dọc -> 1152px                              → cuộn ngang   7px
-       @1024 : xếp dọc ->  976px                              → cuộn ngang 169px
+   🔴 SỐ ĐO THẬT (Edge, 2026-09-17 — bảng 6 cột C2, width theo 13px, sàn 698px, mock CT1):
+       @1920  hai cột  khung 769px  ✅ không cuộn (biên 71px)
+       @1600  hai cột  khung 769px  ✅ không cuộn (biên 71px)
+       @1440  hai cột  khung 760px  ✅ không cuộn (biên 62px)
+       @1400  hai cột  khung 736px  ✅ không cuộn (biên 38px)   ← SÁT NHẤT
+       @1399  xếp dọc  khung 1266px ✅           @1024  xếp dọc  khung 891px ✅
+       @800   xếp dọc  khung 667px  cuộn 31px (< 768 cuộn trong vùng bảng là trạng thái đã chấp nhận)
+   Quy luật đo được: hai cột → khung 736–769px; xếp dọc → khung = min(bề rộng tài liệu, 1440) − 118px.
 
-   🔴 HÌNH DẠNG NGƯỢC ĐỜI, ĐỌC KỸ TRƯỚC KHI "SỬA": màn 1366px là màn DUY NHẤT không phải cuộn,
-   còn 1920px thì cuộn. Không phải lỗi — từ 1400px trở lên bảng bị nhốt trong cột 61%, dưới mốc
-   đó nó được trọn bề ngang trang. Trần `max-width: 1440px` của .trang còn làm @1920 hẹp hơn
-   @1600. Ba con số đó do ba quyết định KHÁC NHAU của lead, đừng gộp lại mà "tối ưu".
+   🔴 Ô BỊ CẮT (đo phần chữ CÒN THẤY, không phải đoán) — mọi ô cắt đều có `title`:
+       mock "Tập thể lớp K39A - Khoá 1994-1998" → @1400/1440 "Tập thể lớp K39A - Khoá 19…"
+                                                 → @1920      "Tập thể lớp K39A - Khoá 199…"
+       vượt ngân sách @1400: "Công ty Cổ phần Đầu tư Phát triển…Việt Nam" → "Công ty Cổ phần Đầu tư Ph…"
+                             lớp "CQ56/11.01-CLC-TT" → "CQ56/11.0…" · "12.500.000.000đ" KHÔNG bị cắt
+   ⚠️ Lớp dài hơn dạng thật "CQ56/11.01" bị cắt MẤT CHỮ SỐ CUỐI ("CQ56/11.0…" — 11.01 hay 11.09?). Còn
+      tooltip; nếu dữ liệu thật có mã lớp dài hơn thì đo lại cột Lớp (xem bảng width ở .tsx).
+   ⚠️ @1400 chỉ dư 38px: nới cột ≥ 38px hoặc thêm cột là 1400 cuộn lại. Đo lại trước khi đổi (N16).
 
-   🔴 CHI PHÍ ĐANG GÁNH: cuộn 200-300px ở chế độ hai cột nghĩa là người đọc MẤT hẳn cột "Họ tên"
-   khi kéo sang xem "Số tiền" — tức mất luôn ý nghĩa của dòng. Cách gỡ rẻ nhất là đặt
-   `fixed: true` cho cột "Họ tên / Đơn vị" (DataTable có sẵn, `.fixed_column` + `.fixed_column_header`)
-   để nó ghim lại khi cuộn ngang. CHƯA làm ở lô này vì lead chưa yêu cầu — đã báo, chờ chốt.
-   ⚠️ Nếu bật `fixed`, nhớ cạm bẫy z-index: `.fixed_column_header` là `z-index: 3`. An toàn vì
-      header trang nay ở `z-index: 100` (xem AppBrandHeader.module.css), nhưng đừng hạ số đó.
-   ⚠️ Thêm cột / đổi width cột nào cũng phải tính lại bảng trên VÀ sửa `min-width` của
-      .tableRegion + dòng "SÀN BẢNG" trong TaiTroChiTietPage.tsx. */
+   🔄 LỊCH SỬ — đừng xoá, người sau cần biết vì sao từng khác:
+      · Hai cột 61/39 từ mốc 1400 được chọn khi sàn 830px, tính TAY "cột trái 839–869px ⇒ vừa".
+      · Sàn nới 830 → 1145 (hết "...", tính theo 16px) → 1270 (thêm Ngày sinh): hai cột cuộn
+        376–534px, và từ khi có Ngày sinh thì KHÔNG bề rộng nào không cuộn.
+      · Bảng tính tay cũ SAI hai lần: quên thanh cuộn 15px + padding thẻ (~70px) — "@1366 nhận 1318px"
+        thật ra là 1233px; VÀ tính chữ theo 16px trong khi `<html style="font-size:13px">` (luật A5).
+      · "Đường 2" (bảng trọn bề rộng, 8 cột sàn 1058, không cuộn 1200–1920) — làm rồi trả lại cùng ngày,
+        vì đổi bố cục khỏi mẫu. Thay bằng C2: giữ bố cục, bỏ Hệ + Khoá (mã lớp đã mang cả hai).
+      · Vì sao mẫu vừa 9 cột mà ta không: giá trị THPT rất ngắn ("12"·"Toán"·"1994"·"A2") — luật A9.
+   ⚠️ Thêm cột / đổi width cột nào cũng phải đo lại bảng trên VÀ sửa `min-width` của .tableRegion +
+      dòng "SÀN BẢNG" trong TaiTroChiTietPage.tsx. */
 .hang3 {
     display: grid;
     grid-template-columns: 61fr 39fr;
@@ -585,10 +598,21 @@
 .tableRegion > :global(div) { flex: 1; min-height: 0; height: 100%; display: flex; flex-direction: column; }
 .tableRegion :global(#warpper) { flex: 1; min-height: 0; }
 
-/* Sàn 1145px (trước 830) — SÁU cột được nới cho hết "...", xem bảng đo trong TaiTroChiTietPage.tsx.
-   ⚠️ Con số này phải khớp tổng width các cột khai trong `cotNhaTaiTro()` ở TaiTroChiTietPage.tsx.
-   Để lệch thì hoặc bảng co dưới width thô (cột bị cắt) hoặc thừa một khoảng trắng bên phải. */
-.tableRegion :global(table) { min-width: 1145px; }
+/* Sàn 698px = 52 STT + tổng 5 cột khai trong `cotNhaTaiTro()` (TaiTroChiTietPage.tsx).
+   Lịch sử: 830 → 1145 → 1270 → 1058 (theo 13px, bỏ Khoa) → 698 (bỏ Hệ + Khoá, Họ tên 200 — vừa khung
+   cột trái 736–769px của bố cục mẫu). Cuộn ngang ĐO THẬT ở khối .hang3.
+   ⚠️ Con số này phải khớp tổng width các cột. Để lệch thì hoặc bảng co dưới width thô (cột bị cắt)
+   hoặc thừa một khoảng trắng bên phải. */
+.tableRegion :global(table) { min-width: 698px; }
+
+/* STT 52px, không phải 40px mặc định. Tiêu đề "STT" + padding 2×9,75px ở 13px đo 47px — 40px cắt
+   chữ, 48px vẫn cắt 1px (đã đo). DataTable KHÔNG cho truyền width cột STT (khai cứng "40px" trong
+   components-ui/data-table/DataTable.tsx — vùng chép nguyên, không sửa), nên ghi đè ở đây, CHỈ trong
+   bảng này. `!important` là bắt buộc: width nằm trong style INLINE của <col> và <th>.
+   ⚠️ Chỉ đúng khi cột đầu là STT (`showRowNumber`). Tắt showRowNumber thì xoá hai rule này — không thì
+      cột "Họ tên" bị ép về 52px. */
+.tableRegion :global(table colgroup col:first-child),
+.tableRegion :global(table thead th:first-child) { width: 52px !important; min-width: 52px !important; }
 
 /* Luôn đi CẶP với renderOVanBan ở các ô chữ: cắt cụt mà không có tooltip là mất dữ liệu. */
 .tableRegion :global(table) tbody td,
@@ -606,12 +630,68 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* ── Khối chi phí ── */
+/* ══ KHỐI CHI PHÍ — theo mẫu sếp (trừ phần ảnh) ══
+   icon tròn "$" + tiêu đề + nhãn nền NHẠT · số lớn + "(trên tổng dự kiến …)" + nút viền ·
+   bảng 4 cột · dải ảnh (giữ như cũ) dưới bảng.
+   🔄 Trước đây (đã thay): mỗi khoản chi là một KHỐI kèm ảnh ngay dưới, lý do "ảnh trong ô bảng bóp
+   méo/kéo cao hàng". Lý do đó vẫn đúng — nên ẢNH KHÔNG vào bảng: bảng chỉ có nút icon mở ảnh đầu,
+   ảnh đủ nằm ở dải dưới bảng. Tương phản + bề rộng cột: ĐO THẬT, số ở từng rule. */
+.tieuDeCoIcon {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.iconTron {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--brand-700);
+    color: var(--surface-default);      /* 8.46:1 ✅ */
+    font-size: var(--text-md);
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Nhãn NỀN NHẠT như mẫu — KHÁC huy hiệu nền đặc ở banner (banner đặt trên ảnh nên buộc nền đặc;
+   thẻ này nền trắng nên nền nhạt an toàn). Tương phản ĐO THẬT (màu trình duyệt tính, nền alpha ghép
+   lên thẻ trắng):
+       --success-fg #1a7f37 trên --success-subtle #dafbe1 = 4.56:1 ✅ (sát sàn — đừng nhạt chữ thêm)
+       --fg-muted   #656d76 trên --neutral-muted (ghép trên trắng) = 4.63:1 ✅ (sát sàn)
+   ⚠️ Cả hai CHỈ đúng trên thẻ TRẮNG. Đặt nhãn này lên --surface-page/--surface-subtle là phải đo lại. */
+.huyHieuNhe {
+    display: inline-block;
+    flex-shrink: 0;
+    padding: 2px var(--space-2);
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.huyHieuNheDang { background: var(--success-subtle); color: var(--success-fg); }
+.huyHieuNheDa   { background: var(--neutral-muted);  color: var(--fg-muted); }
+
+.chiPhiTong {
+    margin: var(--space-3) 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-3);
+    flex-wrap: wrap;
+}
+
+/* Như mẫu: số lớn trên, "(trên tổng dự kiến …)" dưới — HAI DÒNG ở mọi bề rộng, không đặt cạnh nhau. */
 .chiPhiSo {
-    margin: 0 0 var(--space-4);
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .chiPhiSo b {
@@ -627,34 +707,133 @@
     font-size: var(--text-sm);
 }
 
-/* Mỗi khoản chi là một KHỐI, không phải một dòng bảng: nó mang theo ảnh minh chứng bên dưới, mà
-   ảnh trong ô bảng thì hoặc bóp méo hoặc kéo cao cả hàng. Cột phải chỉ 39% nên bảng 4 cột kèm
-   ảnh sẽ cuộn ngang ngay. */
-.khoanChi + .khoanChi {
-    margin-top: var(--space-3);
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--border-muted);
+/* Nút VIỀN như mẫu. CHỈ hiện khi có dòng bị giấu (luật B1) — xem chú thích tại nút trong TSX. */
+.nutVien {
+    flex-shrink: 0;
+    /* Màn hẹp (đo @400) cụm số chiếm hết hàng, nút rớt xuống dòng — `auto` giữ nó BÊN PHẢI như mẫu. */
+    margin-left: auto;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--brand-600);
+    border-radius: var(--radius-sm);
+    background: var(--surface-default);
+    color: var(--brand-600);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
-.khoanChiDau {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    flex-wrap: wrap;
+.nutVien:hover { background: var(--brand-050); }
+.nutVien:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+
+/* Khung bảng: viền + bo góc như mẫu. `overflow-x: auto`: chỉ cuộn khi màn hẹp hơn sàn bảng (xem
+   .bangChi) — từ 800px trở lên đo thật không cuộn. */
+.bangChiKhung {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
 }
 
-.khoanChiNoiDung { flex: 1; min-width: 0; font-size: var(--text-sm); color: var(--fg-default); }
-.khoanChiTien    { font-size: var(--text-sm); color: var(--fg-default); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.khoanChiNgay    { width: 100%; color: var(--fg-muted); font-size: var(--text-xs); }
+/* `table-layout: fixed` + width cột ở colgroup: cột Nội dung ăn phần còn lại và CẮT CỤT (đi cặp
+   `title` ở TSX). Để auto thì một nội dung dài đẩy cột Số tiền/Ngày xuống dòng. */
+/* 🔴 SÀN 438px = 3 cột cố định (126 + 104 + 88 = 318) + 120px tối thiểu cho Nội dung chi. KHÔNG có sàn
+   thì `table-layout: fixed` bóp cột Nội dung về 1px ở màn hẹp (đo thật @400: 1px, cả tiêu đề cũng mất).
+   Có sàn: màn < ~480px thì KHUNG cuộn ngang (.bangChiKhung), trang không cuộn. Đổi width cột ⇒ đổi sàn. */
+.bangChi {
+    width: 100%;
+    min-width: 438px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: var(--text-sm);
+}
+
+.bangChi th,
+.bangChi td {
+    padding: var(--space-2);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bangChi th {
+    background: var(--surface-subtle);
+    color: var(--fg-muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-default);
+}
+
+.bangChi td { color: var(--fg-default); vertical-align: middle; }
+.bangChi tbody tr + tr td { border-top: 1px solid var(--border-muted); }
+
+/* Width cột — ĐO THẬT trên Edge ở 13px (luật A5), ngân sách cho giá trị DÀI NHẤT, padding 2×8px:
+       cột         giá trị dài nhất                 chữ      + pad   = cần    đặt
+       Số tiền     "9.999.999.999đ" (text-sm)       108,2    16      124,2   126
+       Ngày chi    "28/08/2088" (text-sm)            85,4    16      101,4   104
+       Minh chứng  tiêu đề "Minh chứng" (text-xs 600) 67,7   16       83,7    88   (nút chỉ 28)
+   🔄 Lần đo đầu dùng padding 2×12px + width 124/96/96 ⇒ NGÀY BỊ CẮT ở mọi bề rộng ("15/09/2025" cần
+      110px). Chọn giảm padding thay vì nới cột: cột phải @1400 chỉ còn khung 479px.
+   Khung bảng đo thật: 479px @1400 (hẹp nhất khi hai cột) · 495 @1440 · 501 @1920 ⇒ Nội dung chi
+   còn 161 / 177 / 183px. Dưới 1400 xếp dọc, khung ≥ 701px @800. */
+.cotChiTien      { width: 126px; }
+.cotChiNgay      { width: 104px; }
+.cotChiMinhChung { width: 88px; }
+
+.oTienChi { font-variant-numeric: tabular-nums; }
+.oGiua { text-align: center !important; }
+.oTrong { color: var(--fg-muted); }
+
+/* Nút icon mở minh chứng: ô vuông nền xanh nhạt như mẫu. Cao 24px — vùng bấm tối thiểu WCAG 2.5.8. */
+.nutMinhChung {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 24px;
+    vertical-align: middle;
+    border-radius: var(--radius-sm);
+    background: var(--accent-subtle);
+    color: var(--brand-600);
+}
+
+.nutMinhChung:hover { background: var(--brand-050); outline: 1px solid var(--brand-600); }
+.nutMinhChung:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; }
+
+/* Dải ảnh như mẫu: 3 ô CHIA ĐỀU bề rộng khối. Mở hết ("Xem tất cả minh chứng") thì ảnh thứ 4 trở đi
+   xuống hàng mới, cùng lưới 3 cột.
+   🔴 `max-width: 560px` đặt trên KHỐI BAO (dải + nút): dưới 1400 khối chi phí trải trọn bề rộng — không
+   chặn thì đo thật @1366 mỗi ảnh 418×261px, to gấp 2,7 lần ở cột phải (155×97 @1400). Chặn 560 ⇒ ô tối
+   đa ~181px. Chặn trên khối bao chứ không trên <ul> để nút "Xem tất cả" canh phải THEO DẢI ẢNH, không
+   trôi ra mép phải khối. */
+.minhChungKhoi { max-width: 560px; }
 
 .minhChung {
-    margin: var(--space-2) 0 0;
+    margin: var(--space-3) 0 0;
     padding: 0;
     list-style: none;
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-2);
 }
+
+/* Nút dạng LIÊN KẾT như mẫu. --brand-600 trên trắng: đo ở báo cáo lô. */
+.nutXemTatCa {
+    display: block;
+    margin: var(--space-2) 0 0 auto;
+    padding: var(--space-1) 0;
+    border: 0;
+    background: none;
+    color: var(--brand-600);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nutXemTatCa:hover { text-decoration: underline; }
+.nutXemTatCa:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 2px; border-radius: var(--radius-sm); }
 
 .minhChung a {
     display: block;
@@ -669,8 +848,8 @@
 
 .minhChungAnh {
     display: block;
-    width: 110px;
-    height: 65px;
+    width: 100%;
+    aspect-ratio: 16 / 10;
     object-fit: cover;
 }
 
@@ -687,7 +866,9 @@
 
 .khoiThongTin p:last-child { margin-bottom: 0; }
 
-/* ══ < 1400px: hàng 3 xếp dọc — xem phép tính sàn bảng ở khối .hang3 ══ */
+/* ══ < 1400px: hàng 3 xếp dọc ══
+   🔄 Khối này từng bị GỠ (2026-09-17, "đường 2" — bảng trọn bề rộng ở mọi bề rộng) rồi KHÔI PHỤC cùng
+   ngày khi trả bố cục về mẫu sếp. Từ 1400px trở lên: hai cột 61/39 như mẫu. Số đo ở khối .hang3. */
 @media (max-width: 1399.98px) {
     .hang3 {
         grid-template-columns: 1fr;
@@ -711,7 +892,7 @@
         align-items: flex-start;
     }
 
-    /* Bảng 830px không thể vừa màn 430px bằng bất kỳ cách nào — cho nó cuộn NGANG TRONG vùng
+    /* Bảng 698px (từng là 830 / 1145 / 1270 / 1058px) không thể vừa màn 430px bằng bất kỳ cách nào — cho nó cuộn NGANG TRONG vùng
        bảng, và chỉ ở đây. Cột "Họ tên" là isMainColumn nên DataTable giữ nó cố định khi cuộn. */
     .tableRegion { height: 380px; }
 }

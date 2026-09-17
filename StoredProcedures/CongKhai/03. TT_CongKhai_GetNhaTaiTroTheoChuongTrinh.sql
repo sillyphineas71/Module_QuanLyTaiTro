@@ -29,6 +29,7 @@ BEGIN
            nt.ho_ten_don_vi,
            nt.an_danh,
            nt.an_dinh_danh,
+           nt.ngay_sinh,       -- đã che theo muc_an_danh = 0 TRONG VIEW; đừng tự che lại ở đây
            nt.ten_he,
            nt.ten_khoa,
            nt.nien_khoa,

@@ -87,8 +87,22 @@ BEGIN
         nien_khoa           NVARCHAR(50)      NULL,
         ten_lop             NVARCHAR(100)     NULL,
 
-        -- 🔴 KHÔNG CÓ `ngay_sinh` — lead đã bỏ khỏi trang công khai (C3 / A6.4). Không lưu thứ không
-        --    ai được xem: một cột không có trên màn nào vẫn là dữ liệu cá nhân chờ bị rò.
+        -- ══ NGÀY SINH — ĐÃ ĐẢO HAI LẦN, đọc hết trước khi đổi lần thứ ba ══
+        --   1. (T2)          BỎ khỏi bảng công khai: họ tên + lớp + ngày sinh định danh được một người
+        --                    cụ thể, trên một trang ai cũng mở được. DDL P1 không có cột này.
+        --   2. (2026-09-17)  BỎ HẲN khỏi modal: quản trị đối chiếu bằng ảnh chuyển khoản + số tiền +
+        --                    thời điểm, không bằng ngày sinh.
+        --   3. (2026-09-17)  🔴 HIỆN HÀNH — THEO MẪU SẾP: có ở CẢ modal VÀ bảng công khai. Quyết định
+        --                    của sếp; mẫu đã có ô "Ngày sinh *" trong modal và cột "Ngày sinh" trên bảng.
+        -- Lập luận ở (1) KHÔNG sai — nó bị một quyết định cấp trên vượt qua. Lớp giảm thiểu còn lại là
+        -- ẨN DANH: view công khai CHỈ trả ngày sinh khi muc_an_danh = 0 (mức 1 và 2 đều che — ẩn tên
+        -- mà để lộ ngày sinh + lớp thì vẫn định danh được, đúng thứ người ta xin giấu).
+        -- ⚠️ Ai nêu vấn đề quyền riêng tư: xem CLAUDE.md mục 5 + view 03, hai chỗ đó là nơi đổi.
+        --
+        -- NULL = không có dữ liệu: doanh nghiệp và tập thể lớp KHÔNG CÓ ngày sinh. DATE, không DATETIME.
+        -- Ảnh chụp lúc khai như bốn cột định danh (điền sẵn từ STU_HoSoSinhVien.Ngay_sinh với cựu SV
+        -- đăng nhập — quyền SELECT cột đó GIỮ, xem DB_Setup/01_CreateLogin_TaiTro.sql).
+        ngay_sinh           DATE              NULL,
 
         -- Liên hệ RIÊNG TƯ — chỉ quản trị thấy, KHÔNG view công khai nào có hai cột này.
         -- Lý do tồn tại: KHÁCH không đăng nhập, nên khi lời khai của khách bị TỪ CHỐI (không thấy tiền
@@ -174,12 +188,13 @@ BEGIN
 END
 GO
 
-/* 🔴 CHẶN BẢNG TẠO TỪ BẢN DDL CŨ (còn ten_chuyen_nganh, chưa có id_tai_khoan_csv).
+/* 🔴 CHẶN BẢNG TẠO TỪ BẢN DDL CŨ (còn ten_chuyen_nganh, chưa có id_tai_khoan_csv hoặc ngay_sinh).
    `IF NOT EXISTS` ở trên bỏ qua LẶNG LẼ khi bảng đã có. Đặt TRƯỚC các index bên dưới: index trên
    id_tai_khoan_csv sẽ lỗi "cột không tồn tại" — đúng là lỗi, nhưng không nói được VÌ SAO.
    Bảng rỗng ⇒ DROP rồi chạy lại file. Có dữ liệu ⇒ viết script ALTER riêng, đừng DROP. */
 IF COL_LENGTH('dbo.TT_NhaTaiTro', 'ten_chuyen_nganh') IS NOT NULL
    OR COL_LENGTH('dbo.TT_NhaTaiTro', 'id_tai_khoan_csv') IS NULL
+   OR COL_LENGTH('dbo.TT_NhaTaiTro', 'ngay_sinh') IS NULL
     THROW 50011, N'TT_NhaTaiTro duoc tao tu ban DDL CU (P1 dot dau). Bang rong: DROP roi chay lai file nay. Co du lieu: viet script ALTER rieng.', 1;
 GO
 

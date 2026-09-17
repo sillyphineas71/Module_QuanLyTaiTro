@@ -71,15 +71,22 @@ export interface INhaTaiTro {
     ho_ten_don_vi: string | null;
     an_danh: boolean;
     /**
+     * Ngày sinh, ISO `yyyy-MM-dd`. `null` có HAI nghĩa, và màn hình PHẢI tách ra:
+     *   · `an_danh === true`  ⇒ BỊ CHE — server không trả ngày sinh của người ẩn danh (kể cả mức
+     *                           "ẩn tên, giữ lớp": lớp + ngày sinh vẫn chỉ ra đúng một người).
+     *   · `an_danh === false` ⇒ KHÔNG CÓ DỮ LIỆU — doanh nghiệp, tập thể lớp không có ngày sinh.
+     * Hai nghĩa khác nhau không được vẽ chung một ký hiệu (luật A7).
+     *
+     * 🔄 ĐÃ ĐẢO HAI LẦN (2026-09-17). T2 cố ý BỎ trường này khỏi trang công khai: ghép họ tên + lớp +
+     * ngày sinh là định danh được một người cụ thể. Nay THÊM LẠI theo mẫu sếp — quyết định cấp trên,
+     * lập luận cũ không sai mà bị vượt qua. Ba lớp đầy đủ: CLAUDE.md mục 5.
+     */
+    ngay_sinh: string | null;
+    /**
      * Năm trường định danh theo cấu trúc CỦA CỔNG NÀY (Hệ → Khoa → Khoá → Chuyên ngành → Lớp),
      * KHÔNG dùng khuôn THPT của ảnh mẫu (Hệ 12 / Khoa = tên môn).
      * `null` là hợp lệ và thường gặp: doanh nghiệp và tập thể lớp không có đủ năm cấp, và nhà
      * tài trợ có thể là bất kỳ ai chứ không bắt buộc là cựu sinh viên.
-     *
-     * 🔴 CỐ Ý KHÔNG CÓ `ngay_sinh` — lead đã bỏ khỏi trang công khai. Ghép họ tên + lớp đã định
-     * danh được một người cụ thể; thêm ngày sinh là công bố dữ liệu cá nhân ra Internet, đi
-     * ngược kỷ luật A6.4 mà cổng đang giữ rất chặt với `STU_HoSoSinhVien`.
-     * ⚠️ Đừng thêm lại "cho đủ với mẫu".
      */
     ten_he: string | null;
     ten_khoa: string | null;

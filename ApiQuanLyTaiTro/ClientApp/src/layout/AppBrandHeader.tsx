@@ -172,23 +172,22 @@ const AppBrandHeader: React.FC<IAppBrandHeaderProps> = ({
 type MucDieuHuong = { nhan: string; neo: string; duong?: undefined } | { nhan: string; duong: string; neo?: undefined };
 // 🔴 T1 THÊM MỤC THỨ NĂM — "Vận động tài trợ" là ROUTE thật (DUONG_DAN_TAI_TRO), không phải neo.
 //
-// ⚠️ THÊM MỤC LÀ ĐỘNG VÀO NGÂN SÁCH BỀ RỘNG CỦA HEADER, và ngân sách đó có HAI mốc phối hợp:
-//      1366px (AppBrandHeader.module.css) : gộp hai tầng, ẩn thanh mục — nâng từ 1280 vì mục này
-//      1600px (AppLayout.module.css)      : nút tài khoản bỏ email — kéo ca đã-đăng-nhập
-//                                              từ 1531px về 1341px
-//    Đổi một mốc mà không tính lại mốc kia là mở lại đúng lỗ hổng của bảng R9 (nó chỉ tính ca
-//    khách 110px nên chưa bao giờ mô tả ca đã đăng nhập). Bảng đầy đủ nằm trong
-//    AppBrandHeader.module.css, ngay trên @media(max-width: 1365.98px).
+// ⚠️ THÊM MỤC LÀ ĐỘNG VÀO NGÂN SÁCH BỀ RỘNG CỦA HEADER. Mốc gộp hai tầng của cổng này:
+//      1100px (AppBrandHeader.module.css) — ĐO THẬT trên header 3 mục: ca khách vừa từ 1026px.
+//    🔄 Từng là 1366px, chép nguyên từ repo cổng cựu SV (thanh 5 mục) ⇒ màn 1280 mất thanh điều
+//       hướng dù thừa chỗ. Hạ 2026-09-17. Bảng đo + lịch sử: AppBrandHeader.module.css, ngay trên
+//       @media(max-width: 1099.98px).
+//    ⚠️ Mốc 1100 CHƯA TÍNH CA ĐÃ ĐĂNG NHẬP (P4). Mốc 1600 bỏ email ở AppLayout.module.css là của
+//       repo cũ, chưa đo ở cổng này. Khi P4 xong: đo lại cả hai (nợ N17).
 //
-// 🔴 CHỖ CÒN LẠI CHO MỤC THỨ SÁU, ở mốc 1366: **33px** (ca khách) / **25px** (ca đã đăng nhập).
-//    Nhãn ngắn nhất cũng tốn ~118px (94 chữ + 24 gap) ⇒ KHÔNG CÒN CHỖ, kể cả nhãn một từ.
-//    Thêm mục nữa thì phải nâng mốc lần nữa — tính TRƯỚC ở bảng đó, đừng thêm rồi mới đo.
+// 🔴 CHỖ CÒN LẠI CHO MỤC THỨ TƯ, ở mốc 1100: **74px** (ca khách). Nhãn ngắn nhất đo được ~88px
+//    + gap 24 = 112px ⇒ KHÔNG CÒN CHỖ. Thêm mục thì phải nâng mốc — ĐO TRƯỚC, đừng thêm rồi mới đo.
 // 🔴 BỐN MỤC -> BA. Đã gỡ "Tin tức" (cổng này KHÔNG có module tin tức — trỏ tới trang không tồn
 // tại là hứa hão ngay trên thanh điều hướng) và "Giới thiệu" (chưa có khối nội dung nào mang neo
 // `gioi-thieu`; neo trỏ vào hư không thì bấm xong trang đứng im, đọc ra như hỏng).
-// ⚠️ ÍT MỤC HƠN = DƯ CHỖ, không phải thiếu: bảng ngân sách bề rộng trong AppBrandHeader.module.css
-//    được tính cho NĂM mục. Ba mục thì mốc gộp tầng 1366px còn dư rất nhiều — an toàn, nhưng nếu
-//    sau này thêm mục thì ĐỌC LẠI bảng đó trước, đừng thêm rồi mới đo.
+// ⚠️ ÍT MỤC HƠN = DƯ CHỖ, không phải thiếu. 🔄 Câu cũ ở đây ("ba mục thì mốc 1366 còn dư rất nhiều —
+//    an toàn") đúng về chỗ nhưng bỏ sót cái giá: dư chỗ mà vẫn gộp tầng ở 1366 là GIẤU thanh điều
+//    hướng vô cớ ở 1280. Nay mốc đã hạ theo số đo 3 mục (xem khối trên).
 const MUC_DIEU_HUONG: MucDieuHuong[] = [
     { nhan: "Trang chủ", neo: "" },
     { nhan: "Vận động tài trợ", duong: DUONG_DAN_TAI_TRO },

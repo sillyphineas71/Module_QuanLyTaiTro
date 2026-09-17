@@ -105,8 +105,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════════════════════
    🔴 < 1600px: NÚT TÀI KHOẢN BỎ EMAIL, GIỮ VAI TRÒ — đây là thứ cứu ngân sách header
    ═══════════════════════════════════════════════════════════════════════════════════════════
-   ĐỌC BẢNG NGÂN SÁCH trong AppBrandHeader.module.css (ngay trên @media 1365.98px) trước khi
-   đụng khối này. Tóm tắt vì sao nó tồn tại:
+   🔄 GHI CHÚ CỔNG TÀI TRỢ (2026-09-17): khối này và mọi con số bên dưới (1341, 1527, "mốc 1366")
+      là của REPO CỔNG CỰU SV — thanh 5 mục, mốc gộp tầng 1366. Cổng này: thanh 3 mục, mốc gộp tầng
+      đã hạ về 1100 theo đo thật CA KHÁCH; ca đã đăng nhập CHƯA có (P4) nên CHƯA đo. Khi P4 dựng nút
+      tài khoản: đo lại ca B/B' trên header thật, rồi quyết lại cả mốc 1600 này lẫn mốc 1100 (nợ N17).
+   ĐỌC BẢNG NGÂN SÁCH trong AppBrandHeader.module.css (ngay trên @media 1099.98px) trước khi
+   đụng khối này. Tóm tắt vì sao nó tồn tại (số của repo cũ):
 
    Thanh điều hướng hai tầng có HAI ca `actions` bề rộng rất khác nhau, và ca rộng chính là khối
    này:

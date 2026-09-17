@@ -389,10 +389,53 @@
    gây lỗi header cao 646px. */
 
 /* ───────────────────────────────────────────────────────────────────────────────────────────
-   🔴 < 1366px: HAI TẦNG XẸP VỀ MỘT — MỐC NÀY LÀ 1366. ĐỪNG HẠ XUỐNG.
+   🔴 < 1100px: HAI TẦNG XẸP VỀ MỘT — MỐC NÀY LÀ 1100, ĐO THẬT TRÊN HEADER 3 MỤC CỦA CỔNG NÀY
    ───────────────────────────────────────────────────────────────────────────────────────────
-   Lịch sử mốc: R8 = 1024 (hai mục chữ nhỏ) -> R9 = 1280 (bốn mục 16px/700) -> T1 = 1366 (mục
-   thứ NĂM "Vận động tài trợ"). Mỗi lần thêm mục là một lần mốc phải lên.
+   🔄 ĐÃ HẠ 1366 → 1100 (2026-09-17). Mốc 1366 + bảng ngân sách bên dưới là CHÉP NGUYÊN từ repo cổng
+   cựu SV, nơi thanh có NĂM mục. Cổng này chỉ BA mục ⇒ ở 1280 header bị gộp tầng, MẤT thanh điều
+   hướng (kể cả "Vận động tài trợ") dù còn thừa ~250px.
+
+   ĐO THẬT (Edge, tìm nhị phân bề rộng nhỏ nhất header hai tầng còn vừa — không tràn ngang, không
+   mục/khối nào xuống dòng; breakpoint được đóng băng lúc đo):
+       khối nhận diện 442px (logo 91 + tên đơn vị 287 + padding/gap) · bottomBar padding 24 + 40, gap 16
+       3 mục (16px/700 khai TƯỜNG MINH, gap 24): Trang chủ 112 · Vận động tài trợ 163 · Liên hệ 90
+       actions ca A — nút "Đăng nhập": 77px
+       ────────────────────────────────────────────────────────────────────────────────────
+       trang ngắn, KHÔNG thanh cuộn dọc ("/")          vừa từ 1011px
+       trang dài, CÓ thanh cuộn dọc 15px (/tai-tro/:id) vừa từ 1026px   ← CA XẤU NHẤT
+       font dự phòng Segoe UI (Be Vietnam Pro không tải) vừa từ  993px   (hẹp hơn — không phải ca xấu)
+
+   ⇒ MỐC 1100 = ca xấu nhất 1026 + BIÊN 74px. Vì sao không sát 1026: bề rộng chữ lệch vài px giữa
+     hệ điều hành/cách render, và font dự phòng trên macOS (-apple-system) CHƯA đo. Biên này không tốn
+     gì trên thiết bị thật: 1024 vốn không vừa (gộp là đúng), 1280/1366 lấy lại thanh điều hướng;
+     dải 1026–1099 gần như không có màn hình phổ biến.
+
+       bề rộng | ca A (khách) — dư so với 1026 | thanh mục
+       ────────┼───────────────────────────────┼──────────
+       @1920   | dư 894px   ✅                 | hiện
+       @1366   | dư 340px   ✅                 | hiện
+       @1280   | dư 254px   ✅                 | hiện   ← TRƯỚC LÔ NÀY: ẩn
+       @1100   | dư  74px   ✅                 | hiện   ← mốc gộp tầng
+       @1024   | thiếu 2px                     | ẨN, header một tầng
+
+   🔴 MỐC NÀY CHƯA TÍNH CA B (ĐÃ ĐĂNG NHẬP). Cổng này chưa có ca đó (luồng đăng nhập là P4), nên
+      không đo được — và KHÔNG đoán trước. Khi P4 xong: đo lại ca B rồi tính lại mốc (nợ N17,
+      docs/03-no-ky-thuat.md). Số đo repo cũ để so, với NĂM mục: A 1271px · B' (bỏ email) 1293px ·
+      B (có email) 1485px.
+
+   🔴 CHỖ CÒN LẠI CHO MỤC THỨ TƯ, ở mốc 1100: **74px**. Nhãn đo được ngắn nhất ("Tin tức" 88px ở repo
+      cũ) + gap 24 = 112px ⇒ KHÔNG CÒN CHỖ. Thêm mục là phải nâng mốc — đo trước, đừng thêm rồi mới đo.
+
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   BẢNG CŨ — CHÉP TỪ REPO CỔNG CỰU SV (5 MỤC), GIỮ LÀM LỊCH SỬ, KHÔNG MÔ TẢ CỔNG NÀY
+   ═══════════════════════════════════════════════════════════════════════════════════════
+   ⚠️ Các số dưới đây là TÍNH TAY theo số ký tự và ĐÃ ĐO LẠI trên header thật của repo cũ
+      (2026-09-17): cần thật A 1271 / B' 1293 / B 1485, tức bảng ước lượng THỪA 46–62px — lệch về
+      phía an toàn. Lệch KHÔNG do cỡ chữ gốc 13px (chữ mục header khai 16px tường minh) mà do ước
+      lượng ký tự: "Vận động tài trợ" 173 → thật 163; nút "Đăng nhập" 110 → thật 77.
+
+   Lịch sử mốc (repo cũ): R8 = 1024 (hai mục chữ nhỏ) -> R9 = 1280 (bốn mục 16px/700) -> T1 = 1366
+   (mục thứ NĂM "Vận động tài trợ"). Cổng này: 1366 (chép) -> 1100 (đo thật, 3 mục).
 
    ═══════════════════════════════════════════════════════════════════════════════════════
    🔴 LUẬT BẮT BUỘC: ĐO THEO CA `actions` RỘNG NHẤT, KHÔNG PHẢI CA ĐANG NHÌN THẤY LÚC ĐO
@@ -444,8 +487,9 @@
    Vì sao KHÔNG cứu được bằng cách thu nhỏ: thứ chiếm chỗ lớn nhất là KHỐI NHẬN DIỆN 455px, mà
    nó không co thêm được nếu tên đơn vị vẫn phải đọc được (đã thử ở R9: hạ mục về 14px + gap 12
    vẫn thiếu). Dưới mốc, header quay về hình dạng một tầng 80px và mọi trang vẫn tới được qua
-   Landing và footer. */
-@media (max-width: 1365.98px) {
+   Landing và footer.
+   (HẾT BẢNG CŨ. Mốc hiện hành của cổng này: 1100 — xem khối đo thật ở đầu cụm.) */
+@media (max-width: 1099.98px) {
     .topBar {
         display: none;
     }

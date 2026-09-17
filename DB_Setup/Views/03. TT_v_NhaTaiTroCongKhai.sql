@@ -18,14 +18,21 @@ GO
 --   Tên thật LUÔN nằm trong bảng (quản trị cần để đối chiếu). Nếu view trả tên thật rồi FE giấu đi
 --   thì tên ĐÃ RỜI máy chủ — mở DevTools là đọc được. Lọc ở FE là không lọc.
 --
---   muc_an_danh │ ho_ten_don_vi │ 4 cột định danh │ an_danh │ an_dinh_danh
---   ────────────┼───────────────┼─────────────────┼─────────┼─────────────
---        0      │ tên thật      │ giá trị thật    │    0    │     0
---        1      │ NULL          │ giá trị thật    │    1    │     0
---        2      │ NULL          │ NULL            │    1    │     1
---     khác      │ NULL          │ NULL            │    1    │     1      ← HỎNG VỀ PHÍA AN TOÀN
+--   muc_an_danh │ ho_ten_don_vi │ ngay_sinh │ 4 cột định danh │ an_danh │ an_dinh_danh
+--   ────────────┼───────────────┼───────────┼─────────────────┼─────────┼─────────────
+--        0      │ tên thật      │ thật      │ giá trị thật    │    0    │     0
+--        1      │ NULL          │ NULL      │ giá trị thật    │    1    │     0
+--        2      │ NULL          │ NULL      │ NULL            │    1    │     1
+--     khác      │ NULL          │ NULL      │ NULL            │    1    │     1      ← HỎNG VỀ PHÍA AN TOÀN
 --   Các CASE viết theo "chỉ hiện khi BẰNG giá trị cho phép", không theo "che khi bằng 1/2", để một
 --   giá trị lạ lọt vào cột (lỗi service, sửa tay) rơi về CHE chứ không rơi về LỘ.
+--
+-- 🔴 NGÀY SINH ĐI THEO TÊN, KHÔNG THEO LỚP — lead chốt 2026-09-17 khi đưa ngày sinh ra công khai
+--    (quyết định của sếp, theo mẫu; ba lớp lập luận ở DDL TT_NhaTaiTro và CLAUDE.md mục 5).
+--    Mức 1 "ẩn tên, giữ lớp" mà để lộ ngày sinh thì LỚP + NGÀY SINH vẫn chỉ ra đúng một người — đúng
+--    thứ người đó xin giấu. Nên ngày sinh chỉ hiện khi muc_an_danh = 0, giống ho_ten_don_vi.
+--    ⚠️ Đừng "gom cho gọn" ngay_sinh vào nhóm IN (0, 1) của bốn cột định danh. Hai nhóm khác nhau là
+--       CÓ CHỦ ĐÍCH: lớp/khoá một mình định danh cả trăm người, ngày sinh + lớp thì chỉ một.
 --
 -- 🔴 `an_dinh_danh` KHÔNG CÓ TRONG HỢP ĐỒNG FE (INhaTaiTro chỉ có `an_danh`). Không có nó thì FE
 --    không phân biệt được "ẩn tất cả" (mức 2) với "ẩn tên + không có dữ liệu lớp" (mức 1 của một
@@ -38,8 +45,9 @@ GO
 -- CỐ Ý KHÔNG CÓ: email_lien_he · sdt_lien_he · ly_do_tu_choi · trang_thai_duyet · muc_an_danh ·
 -- thoi_diem_duyet · id_nguoi_duyet · id_tai_khoan_csv · 5 trường audit.
 -- 🔴 id_tai_khoan_csv đặc biệt: nó nối một dòng công khai (kể cả dòng ẩn danh!) với một TÀI KHOẢN cựu
---    SV — tức là với họ tên thật trong CSV_TaiKhoan/STU_HoSoSinhVien. Lộ cột này là GỠ ẨN DANH. Thêm cột vào view này thì trả lời trước câu
--- của luật C3: "ghép với các cột đang có thì định danh được ai?".
+--    SV — tức là với họ tên thật trong CSV_TaiKhoan/STU_HoSoSinhVien. Lộ cột này là GỠ ẨN DANH.
+-- Thêm cột vào view này thì trả lời trước câu của luật C3: "ghép với các cột đang có thì định danh
+-- được ai?". (ngay_sinh là cột duy nhất được thêm dù câu trả lời là "được" — do quyết định cấp trên.)
 CREATE OR ALTER VIEW dbo.TT_v_NhaTaiTroCongKhai
 AS
 SELECT nt.id,
@@ -50,6 +58,9 @@ SELECT nt.id,
             THEN NULLIF(LTRIM(RTRIM(nt.ho_ten_don_vi)), N'') END                  AS ho_ten_don_vi,
        CAST(CASE WHEN nt.muc_an_danh = 0 THEN 0 ELSE 1 END AS BIT)                AS an_danh,
        CAST(CASE WHEN nt.muc_an_danh IN (0, 1) THEN 0 ELSE 1 END AS BIT)          AS an_dinh_danh,
+
+       -- Theo TÊN (= 0), không theo lớp (IN (0, 1)) — xem khối 🔴 NGÀY SINH ở đầu file.
+       CASE WHEN nt.muc_an_danh = 0 THEN nt.ngay_sinh END                         AS ngay_sinh,
 
        CASE WHEN nt.muc_an_danh IN (0, 1)
             THEN NULLIF(LTRIM(RTRIM(nt.ten_he)), N'') END                         AS ten_he,

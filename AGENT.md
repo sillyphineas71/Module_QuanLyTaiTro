@@ -3,6 +3,16 @@
 > 🔴 **Đọc file này và `CLAUDE.md` trước MỌI công việc, kể cả việc nhỏ nhất.**
 > Không có ngoại lệ cho "việc này nhỏ thôi".
 
+> 🔴 **VIẾT TIẾNG VIỆT — BÁO CÁO, COMMENT TRONG CODE, VÀ DOCS. Không ngoại lệ.**
+> **Vì sao:** ~120 mục docs của hai repo đều viết tiếng Việt. Trộn hai ngôn ngữ thì người đọc sau
+> phải dịch qua lại, và `grep` — vốn đã không khớp hoa/thường tiếng Việt (§5) — càng kém tin: tìm
+> "ẩn danh" không ra đoạn viết "anonymous".
+> Luật này nói về **chữ**, không nói về **tên**: biến, cột, hàm, SP giữ đúng quy ước đang có
+> (`ho_ten_don_vi`, `TT_CongKhai_*`…). Thuật ngữ kỹ thuật không có từ Việt quen dùng (JWT, index,
+> view) giữ nguyên.
+> ⚠️ Luật này từng chỉ nằm ở §7, sau sáu mục kỹ thuật — và đã bị đọc lướt: hai lô liền báo cáo
+> bằng tiếng Anh. Vì thế nó đứng ở đây.
+
 ---
 
 ## 1. Không tự quyết
@@ -137,7 +147,7 @@ Bỏ một cái mà giữ cái kia là cắt cụt trần, mất dữ liệu, kh
 
 ## 7. Cách báo cáo
 
-Viết **tiếng Việt**. Mỗi mục tối đa **5 dòng**. Chi tiết ghi vào `docs/`, không vào báo cáo.
+Viết **tiếng Việt** (luật 🔴 ở đầu file). Mỗi mục tối đa **5 dòng**. Chi tiết ghi vào `docs/`, không vào báo cáo.
 
 Mục cuối **luôn là**: *"Khác mô tả của lead / rủi ro"* — kể cả khi không có gì.
 

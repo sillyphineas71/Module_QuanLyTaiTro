@@ -40,8 +40,12 @@ GO
 --  · so_tien NULL khi chờ — quản trị chưa nhập. FE hiện "Đang chờ xác nhận", không hiện 0.
 --
 --  CỐ Ý KHÔNG TRẢ (khi thêm, trả lời "người xem có cần, và có an toàn nếu phiên bị chiếm không?"):
---  · ly_do_tu_choi   — viết cho QUẢN TRỊ KHÁC đọc, câu chữ có thể nội bộ ("nghi ảnh sửa"). Hiện cho
---                      người tài trợ là quyết định của lead, không phải mặc định. (báo cáo lô P1b)
+--  · ly_do_tu_choi   — 🔴 ĐÃ CHỐT (2026-09-17): KHÔNG BAO GIỜ trả cho người khai. Lý do viết cho QUẢN
+--                      TRỊ đọc ("ảnh không khớp sao kê", "nghi khai khống"), không phải để giải thích
+--                      với người ngoài. FE hiện nhãn "Từ chối" + đúng một câu chung "Vui lòng liên hệ
+--                      Khoa nếu cần biết thêm". Kênh báo lại là NGƯỜI (email_lien_he / sdt_lien_he),
+--                      không phải màn hình. Chi tiết: docs/01-kien-truc.md §2, CLAUDE.md mục 5.
+--                      ⚠️ Đừng thêm cột này vào SP "cho người dùng đỡ thắc mắc" — đó là đảo một quyết định.
 --  · email_lien_he / sdt_lien_he — phiên 7 ngày trên máy dùng chung ⇒ người khác mở lịch sử đọc được.
 --  · ảnh chuyển khoản — chứa số tài khoản, số dư; phục vụ file cần endpoint có kiểm quyền riêng.
 --  · thoi_diem_duyet / id_nguoi_duyet / audit — nội bộ.

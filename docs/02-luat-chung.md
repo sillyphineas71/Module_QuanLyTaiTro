@@ -47,10 +47,32 @@ Header phải **trên mọi thứ của trang** và **dưới drawer + portal**.
 (`components-ui/data-table/renderOVanBan.tsx`). Cắt cụt mà không có đường đọc lại giá trị đầy đủ là
 **làm mất dữ liệu khỏi giao diện**, không phải vấn đề thẩm mỹ.
 
-**A5. Width cột tính theo font 16px, KHÔNG phải 14px.** Không file nào đặt `font-size` cho `body`
-hay `BaseStyles.tsx` ⇒ bảng chạy ở mặc định trình duyệt. Ngân sách cũ tính theo 14px làm **6/8 cột**
-của bảng nhà tài trợ thiếu chỗ. Cột **đóng** (định dạng cố định: ngày, tiền, khoá) thì đặt width đủ
-vĩnh viễn; cột **mở** (chữ tự do như họ tên) thì chấp nhận cắt + tooltip, đừng nới mãi.
+**A5. Width cột tính theo font 13px — ĐO TRONG DOM THẬT, đừng tin comment hay trí nhớ.** (sửa
+2026-09-17)
+
+- **Font gốc là 13px**, đặt ở **`public/index.html` dòng 2**: `<html lang="vi" style="font-size: 13px;">`.
+  `body` và `BaseStyles.tsx` không khai `font-size`, nên dòng đó là thứ DUY NHẤT đặt cỡ chữ gốc:
+  ô bảng 13px, `1rem = 13px`, padding ô `0.75rem` = **9,75px mỗi bên** (không phải 12px).
+- **Cách kiểm — mỗi lần định con số width:** mở trang thật, chạy trong DevTools
+  `getComputedStyle(document.querySelector('table tbody td')).fontSize` (và `.paddingLeft`). Muốn
+  biết một cột CẦN bao nhiêu: đặt chuỗi ca xấu nhất vào ô thật, gỡ width cố định
+  (`table-layout:auto; width:max-content`), đọc bề rộng `<th>`. Đo, đừng nhân "số ký tự × px/ký tự".
+- **Ngân sách chịu GIÁ TRỊ DÀI NHẤT CÓ THỂ, không phải dài nhất trong mock.** Mock ngắn hơn dữ liệu
+  thật một cách có hệ thống (vd lớp mock "K39A", lớp thật "CQ56/11.01"). Chuỗi số/ngày dùng chữ số
+  RỘNG NHẤT của font (Be Vietnam Pro 13px: "4").
+- Cột **đóng** (ngày, tiền, khoá) thì đặt width đủ vĩnh viễn; cột **mở** (họ tên) và **nửa đóng**
+  (hệ, lớp — từ danh mục) thì ghi rõ ngưỡng, quá ngưỡng thì chấp nhận cắt + tooltip, đừng nới mãi.
+  ⚠️ Cắt cụt đi CẶP: `renderOVanBan` (có `title`) + rule cắt cụt trong CSS module — bỏ một giữ một
+  là hỏng.
+
+> 🔄 **Trạng thái cũ — SAI, giữ lại để biết vì sao lệch:** "Width cột tính theo font **16px**, KHÔNG
+> phải 14px. Không file nào đặt `font-size` cho `body` hay `BaseStyles.tsx` ⇒ bảng chạy ở mặc định
+> trình duyệt." Vế sau đúng, kết luận sai: **quên thẻ `<html>`**. Hệ quả: mọi width tính theo 16px +
+> padding 12px **cấp thừa ~20% cùng một hướng** (bảng nhà tài trợ: sàn 1270px, nội dung thật cần
+> ~1047px), và bảng cuộn ngang vì thừa chứ không vì thiếu.
+> Trớ trêu: docs repo cổng cựu SV **đã biết 13px từ lâu** (`ui-no-ky-thuat.md` mục 8, "Bỏ
+> `font-size: 13px` trên `<html>` — HOÃN") — luật 16px được viết sau, không đối chiếu mục đó, và
+> không đo DOM. Đó chính là lý do vế "đo trong DOM thật" đứng ở tiêu đề luật.
 
 **A6. Thang bề rộng: đo theo CA `actions` RỘNG NHẤT, không theo ca đang nhìn thấy lúc đo.** Header
 có ca khách (~110px) và ca đã đăng nhập (~308px). Bảng ngân sách cũ chỉ tính ca 110px nên **chưa
@@ -62,6 +84,31 @@ nhau (`—` vs `Nhà tài trợ ẩn danh`). Dùng chung một ký hiệu là n�
 **A8. Ảnh thiếu và ảnh HỎNG xử như nhau** (ô gradient thay thế), **trừ mã QR**: QR hỏng thì **ẩn
 hẳn khối**. Một ô vuông ở đúng chỗ QR *trông như* một mã QR — người ta giơ điện thoại lên quét rồi
 kết luận hệ thống hỏng. Ô giữ chỗ cho thứ **phải quét được mới có nghĩa** là một lời hứa sai.
+
+**A9. Mẫu THPT có giá trị NGẮN HƠN dữ liệu đại học ở MỌI cột định danh — chép bố cục được, chép
+số cột thì không.** (2026-09-17)
+
+Mẫu sếp là màn của một **trường THPT**: bảng nhà tài trợ vừa 9 cột trong khung ~61% **không phải vì
+ít cột** mà vì mỗi ô định danh chỉ vài ký tự. Cùng cột, dữ liệu của cổng này dài gấp đôi:
+
+| Cột | Mẫu THPT | px trong ảnh mẫu (thu nhỏ) | Cổng này (đại học) — ca dài nhất | Cần ở 13px (đo DOM) |
+|---|---|---|---|---|
+| Hệ | "12" (khối lớp) | ~37 | "Liên thông vừa làm vừa học" | 195 |
+| Khoa | "Toán" (môn học) | ~51 | tên khoa đầy đủ | ~237 |
+| Khoá | "1994" (một năm) | ~47 | "1994-1998" | 103 |
+| Lớp | "A2" | ~44 | "CQ56/11.01" | 93 |
+| **Hệ + Khoá + Lớp** (so cùng bộ ba) | | | | **~391** |
+| **Cả 4 cột định danh** | | **~180** (≈ 250px thật khi quy tỉ lệ ảnh ~0,72) | | **~628** |
+
+⚠️ Cột px ảnh mẫu là **ước lượng theo toạ độ trên ảnh 1219px** (ảnh thu nhỏ từ bản gốc ~1690–1820px);
+cột "Cần" là **đo DOM thật**. So để thấy **cỡ chênh**, đừng trừ hai cột cho nhau lấy số chính xác.
+
+- **Hệ quả:** mọi màn chép bố cục từ mẫu đó sẽ gặp lại đúng chuyện này. **Giữ bố cục mẫu (ràng buộc),
+  điều chỉnh số cột (biến)** — và quyết định cột theo **độ dài dữ liệu thật**, không theo mẫu.
+- **Trước khi thêm một cột "cho giống mẫu":** đo ca dài nhất có thể (luật A5) rồi cộng vào sàn bảng, so
+  với khung thật của vùng chứa. Đừng suy ra "mẫu vừa thì ta vừa".
+- **Cột lặp thông tin đã có thì bỏ trước:** mã lớp thật tự mang hệ + khoá ("CQ56/11.01" = chính quy,
+  khoá 56; "K66A1" = khoá 66) — đó là lý do bảng nhà tài trợ bỏ Hệ, Khoá mà giữ Lớp.
 
 ## B. Làm hay không làm
 
@@ -101,10 +148,17 @@ last_modified_times DATETIME DEFAULT(GETDATE()), last_modified_user_id NVARCHAR(
 ```
 Xoá **mềm** (`is_deleted = 1`). Mọi truy vấn đọc phải lọc `is_deleted = 0`.
 
-**C3 (A6.4). Dữ liệu cá nhân không ra trang công khai.** Bảng nhà tài trợ công khai **cố ý không có
-ngày sinh**: ghép họ tên + lớp đã định danh được một người cụ thể, thêm ngày sinh là công bố dữ liệu
+**C3 (A6.4). Dữ liệu cá nhân không ra trang công khai.** ~~Bảng nhà tài trợ công khai **cố ý không có
+ngày sinh**~~: ghép họ tên + lớp đã định danh được một người cụ thể, thêm ngày sinh là công bố dữ liệu
 cá nhân ra Internet. Thêm cột vào một màn công khai thì phải trả lời được câu "ghép với các cột đang
 có thì định danh được ai?" — xem thêm giới hạn quyền theo cột ở [01-kien-truc.md](01-kien-truc.md#4).
+
+> 🔄 **Ngoại lệ đã ghi (2026-09-17): ngày sinh NAY CÓ trên bảng công khai** — quyết định của sếp, theo
+> mẫu. Luật C3 **vẫn giữ** cho mọi cột khác; ngày sinh là ngoại lệ **có tên**, không phải tiền lệ.
+> Giảm thiểu: ngày sinh chỉ hiện khi `muc_an_danh = 0` (đi theo tên, không theo lớp) — view 03.
+> Ba lớp quyết định: `CLAUDE.md` mục 5, "Ngày sinh theo mẫu sếp".
+> ⚠️ Câu hỏi của C3 cho ngày sinh có câu trả lời là **"được"** — tức người thêm cột tiếp theo **không**
+> được viện dẫn ngày sinh làm lý do để thêm.
 
 **C4. Tên cột viết thường, tiền tố bảng `TT_`, liên kết mềm (không khoá ngoại).**
 

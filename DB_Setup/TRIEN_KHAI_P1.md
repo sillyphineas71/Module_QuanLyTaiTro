@@ -8,7 +8,8 @@ Tạo 8 bảng + 5 view công khai + 4 SP đọc công khai (`TT_CongKhai_*`) + 
 ## 🔴 Đã từng chạy bản P1 ĐỢT ĐẦU trên DB này chưa?
 
 Lô đối chiếu ảnh mẫu đã đổi cấu trúc hai bảng: `TT_ChuongTrinh` (`mo_ta_ngan` → `phu_de`, thêm
-`loi_keu_goi`, `ten_chu_tai_khoan`) và `TT_NhaTaiTro` (bỏ `ten_chuyen_nganh`, thêm `id_tai_khoan_csv`).
+`loi_keu_goi`, `ten_chu_tai_khoan`) và `TT_NhaTaiTro` (bỏ `ten_chuyen_nganh`, thêm `id_tai_khoan_csv`,
+thêm lại `ngay_sinh` theo mẫu sếp).
 
 `IF NOT EXISTS` **bỏ qua lặng lẽ** bảng đã có ⇒ chạy file mới lên DB đã có bảng cũ sẽ "thành công"
 mà schema vẫn cũ. Hai file bảng đó có khối chặn: gặp schema cũ thì **dừng bằng lỗi 50010 / 50011**.

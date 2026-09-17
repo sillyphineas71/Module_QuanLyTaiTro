@@ -48,9 +48,48 @@ Cổng Tài trợ  "Bạn là Cựu sinh viên? → Đăng nhập ngay"
 - **Mỗi request kiểm lại `CSV_TaiKhoan`** (DB chung nên rẻ) — đó là cơ chế THU HỒI: tài khoản bị xoá /
   từ chối ở cổng kia thì phiên ở cổng này chết theo ở request kế tiếp, không đợi hết 7 ngày.
   ⚠️ `CSV_TaiKhoan.trang_thai` là **0 chờ · 1 duyệt · 2 từ chối** — **KHÔNG có trạng thái "khoá"**.
-  Điều kiện "phiên còn sống" phải viết rõ ở lô đăng nhập: `is_deleted = 0 AND trang_thai = 1` và
-  `vai_tro` nào được vào (chỉ 3 = Cựu SV, hay cả Lớp trưởng?) — **lead chốt**.
+  "Khoá bên kia" thực chất là bị xoá mềm hoặc trạng thái rời khỏi 1.
 - Hết hạn 7 ngày → hiện nút "Đăng nhập lại", **không** tự chuyển trang.
+- **`quay_lai` phải chặn open redirect CỨNG** — việc của lô đăng nhập, chi tiết ở
+  [`03-no-ky-thuat.md`](03-no-ky-thuat.md), mục **N13**. Ở luồng này open redirect **không chỉ là lừa đảo**:
+  URL chuyển về mang theo **mã đổi phiên**, nên chuyển nhầm host là **trao mã đăng nhập cho người khác**.
+
+### 🔴 Điều kiện "phiên cựu SV còn sống" — ĐÃ CHỐT
+
+```sql
+is_deleted = 0 AND trang_thai = 1 AND vai_tro IN (2, 3)
+```
+
+Kiểm ở **cả hai** chỗ: lúc đổi mã, và **mỗi request** sau đó (cơ chế thu hồi ở trên).
+
+> **Trạng thái cũ (P1b):** câu hỏi mở — "chỉ `vai_tro = 3`, hay cả Lớp trưởng?".
+> **Lead chốt:** cả **3 (Cựu SV)** VÀ **2 (Lớp trưởng)**; **KHÔNG** 1 (Quản lý).
+
+| `vai_tro` | Vai ở cổng cựu SV | Đăng nhập cổng Tài trợ? | Vì sao |
+|---|---|---|---|
+| 3 | Cựu SV | ✅ | đối tượng chính |
+| 2 | Lớp trưởng | ✅ | lớp trưởng **cũng là cựu SV**, chỉ có thêm quyền ở cổng kia. Chặn họ là chặn một người thật vì lý do kỹ thuật của hệ thống khác |
+| 1 | Quản lý | ❌ | nhân viên Khoa, không phải người tài trợ. Muốn tài trợ thì dùng **luồng khách** |
+
+⚠️ Viết `IN (2, 3)` — danh sách những vai **được vào**, KHÔNG viết `<> 1`. Ngày cổng cựu SV thêm vai
+thứ tư, `<> 1` sẽ lặng lẽ cho vai đó vào; `IN (2, 3)` thì chặn cho tới khi có người quyết.
+
+### 🔴 Lời khai bị TỪ CHỐI: người khai thấy TRẠNG THÁI, không thấy LÝ DO — ĐÃ CHỐT
+
+"Lịch sử tài trợ của tôi" hiện dòng bị từ chối với nhãn **"Từ chối"** kèm **đúng một câu chung**:
+**"Vui lòng liên hệ Khoa nếu cần biết thêm."** — **không** hiện `ly_do_tu_choi`.
+
+> **Trạng thái cũ (P1b):** SP lịch sử không trả `ly_do_tu_choi`, ghi là "chờ lead quyết".
+> **Lead chốt:** giữ nguyên — **không bao giờ** cho người khai xem.
+
+- **Vì sao:** lý do từ chối viết cho **quản trị đọc** — có thể là "ảnh không khớp sao kê" hay "nghi
+  khai khống". Hiện nó ra là giải thích với người ngoài bằng câu chữ nội bộ, và với câu thứ hai là
+  buộc tội thẳng người đang đọc.
+- **Kênh báo lại là NGƯỜI, không phải màn hình** — đó là lý do `email_lien_he` / `sdt_lien_he` tồn tại
+  trong `TT_NhaTaiTro`. Quản trị chọn câu chữ khi liên hệ.
+- ⚠️ Vẫn hiện dòng "Từ chối", **không giấu dòng**: giấu là lời khai biến mất khỏi lịch sử của chính
+  người đã chuyển tiền, không ai nói gì.
+- ⚠️ Chặn ở **SP** (không trả cột), không chặn ở FE — cột đã rời máy chủ thì DevTools đọc được.
 
 ### 🔴 "Lịch sử của tôi" = những lần TÔI KHAI, không phải những lần tên tôi xuất hiện
 

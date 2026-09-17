@@ -49,23 +49,23 @@ VALUES (@ct, N'a', 5000, 1), (@ct, N'b', 7000, 2);
 DECLARE @A INT, @B INT, @C INT, @D INT, @E INT, @F INT, @G INT, @H INT;
 
 -- A: đã duyệt, công khai đầy đủ                                  → HIỆN, có tên
-INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, trang_thai_duyet, so_tien, ngay_tai_tro)
-VALUES (@ct, 1, N'Nguoi A', 0, N'K39A', 2, 1000, @homnay);  SET @A = SCOPE_IDENTITY();
+INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, ngay_sinh, trang_thai_duyet, so_tien, ngay_tai_tro)
+VALUES (@ct, 1, N'Nguoi A', 0, N'K39A', '1976-03-15', 2, 1000, @homnay);  SET @A = SCOPE_IDENTITY();
 -- B: CHỜ DUYỆT                                                   → KHÔNG hiện
 INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, ngay_tai_tro)
 VALUES (@ct, 1, N'Nguoi B chua duyet', 0, N'K39A', @homnay); SET @B = SCOPE_IDENTITY();
 -- C: đã duyệt, ẩn tên giữ lớp                                    → HIỆN, tên NULL, lớp còn
-INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, trang_thai_duyet, so_tien, ngay_tai_tro)
-VALUES (@ct, 1, N'Nguoi C that', 1, N'K39A', 2, 2000, @homnay); SET @C = SCOPE_IDENTITY();
+INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, ngay_sinh, trang_thai_duyet, so_tien, ngay_tai_tro)
+VALUES (@ct, 1, N'Nguoi C that', 1, N'K39A', '1977-01-01', 2, 2000, @homnay); SET @C = SCOPE_IDENTITY();
 -- D: đã duyệt, ẩn tất cả                                         → HIỆN, tên + lớp NULL
-INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, trang_thai_duyet, so_tien, ngay_tai_tro)
-VALUES (@ct, 1, N'Nguoi D that', 2, N'K40B', 2, 3000, @homnay); SET @D = SCOPE_IDENTITY();
+INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, ngay_sinh, trang_thai_duyet, so_tien, ngay_tai_tro)
+VALUES (@ct, 1, N'Nguoi D that', 2, N'K40B', '1978-02-02', 2, 3000, @homnay); SET @D = SCOPE_IDENTITY();
 -- E: TỪ CHỐI                                                     → KHÔNG hiện
 INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, trang_thai_duyet, ly_do_tu_choi, ngay_tai_tro)
 VALUES (@ct, 1, N'Nguoi E tu choi', 0, 3, N'khong thay tien', @homnay); SET @E = SCOPE_IDENTITY();
 -- F: đã duyệt, muc_an_danh LẠ (9)                                → HIỆN, CHE HẾT (hỏng về phía an toàn)
-INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, trang_thai_duyet, so_tien, ngay_tai_tro)
-VALUES (@ct, 1, N'Nguoi F that', 9, N'K41C', 2, 4000, @homnay); SET @F = SCOPE_IDENTITY();
+INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, ten_lop, ngay_sinh, trang_thai_duyet, so_tien, ngay_tai_tro)
+VALUES (@ct, 1, N'Nguoi F that', 9, N'K41C', '1979-03-03', 2, 4000, @homnay); SET @F = SCOPE_IDENTITY();
 -- G: "đã duyệt" nhưng THIẾU số tiền (lỗi dữ liệu)                 → KHÔNG hiện
 INSERT dbo.TT_NhaTaiTro (id_chuong_trinh, loai, ho_ten_don_vi, muc_an_danh, trang_thai_duyet, ngay_tai_tro)
 VALUES (@ct, 1, N'Nguoi G thieu tien', 0, 2, @homnay); SET @G = SCOPE_IDENTITY();
@@ -103,7 +103,7 @@ INSERT dbo.TT_KhoanChi (id_chuong_trinh, noi_dung, so_tien, ngay_chi) VALUES (@c
 INSERT dbo.TT_MinhChungChi (id_khoan_chi, ten_file, thu_tu) VALUES (SCOPE_IDENTITY(), N'TEST_P1_nhap.jpg', 1);
 
 /* ═════════════════ LỚP CÔNG KHAI ═════════════════ */
-CREATE TABLE #nt (id INT, loai TINYINT, ho_ten_don_vi NVARCHAR(300), an_danh BIT, an_dinh_danh BIT,
+CREATE TABLE #nt (id INT, loai TINYINT, ho_ten_don_vi NVARCHAR(300), an_danh BIT, an_dinh_danh BIT, ngay_sinh DATE,
                   ten_he NVARCHAR(200), ten_khoa NVARCHAR(200), nien_khoa NVARCHAR(50),
                   ten_lop NVARCHAR(100), so_tien DECIMAL(18,0), ngay_tai_tro DATE);
 INSERT #nt EXEC dbo.TT_CongKhai_GetNhaTaiTroTheoChuongTrinh @id_chuong_trinh = @ct;
@@ -112,16 +112,16 @@ IF (SELECT COUNT(*) FROM #nt) <> 4
     BEGIN PRINT N'FAIL 1: SP03 phai tra dung 4 luot (A, C, D, F).'; SET @loi += 1; END
 IF EXISTS (SELECT 1 FROM #nt WHERE id IN (@B, @E, @G, @H, @X1, @X2, @X4, @Y1))
     BEGIN PRINT N'FAIL 2: SP03 LO luot chua duyet / tu choi / thieu tien / da xoa.'; SET @loi += 1; END
-IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @A AND ho_ten_don_vi = N'Nguoi A' AND an_danh = 0 AND an_dinh_danh = 0)
-    BEGIN PRINT N'FAIL 3: luot cong khai A phai co ten.'; SET @loi += 1; END
-IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @C AND ho_ten_don_vi IS NULL AND ten_lop = N'K39A' AND an_danh = 1 AND an_dinh_danh = 0)
-    BEGIN PRINT N'FAIL 4: an ten giu lop (C) sai.'; SET @loi += 1; END
-IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @D AND ho_ten_don_vi IS NULL AND ten_lop IS NULL AND an_danh = 1 AND an_dinh_danh = 1)
+IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @A AND ho_ten_don_vi = N'Nguoi A' AND ngay_sinh = '1976-03-15' AND an_danh = 0 AND an_dinh_danh = 0)
+    BEGIN PRINT N'FAIL 3: luot cong khai A phai co ten VA ngay sinh.'; SET @loi += 1; END
+IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @C AND ho_ten_don_vi IS NULL AND ngay_sinh IS NULL AND ten_lop = N'K39A' AND an_danh = 1 AND an_dinh_danh = 0)
+    BEGIN PRINT N'FAIL 4: an ten giu lop (C) sai - ngay sinh PHAI bi che du lop con hien (lop + ngay sinh = mot nguoi).'; SET @loi += 1; END
+IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @D AND ho_ten_don_vi IS NULL AND ngay_sinh IS NULL AND ten_lop IS NULL AND an_danh = 1 AND an_dinh_danh = 1)
     BEGIN PRINT N'FAIL 5: an tat ca (D) sai.'; SET @loi += 1; END
-IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @F AND ho_ten_don_vi IS NULL AND ten_lop IS NULL AND an_dinh_danh = 1)
+IF NOT EXISTS (SELECT 1 FROM #nt WHERE id = @F AND ho_ten_don_vi IS NULL AND ngay_sinh IS NULL AND ten_lop IS NULL AND an_dinh_danh = 1)
     BEGIN PRINT N'FAIL 6: muc_an_danh la (F) phai CHE HET.'; SET @loi += 1; END
 
-CREATE TABLE #nt_nhap (id INT, loai TINYINT, ho_ten_don_vi NVARCHAR(300), an_danh BIT, an_dinh_danh BIT,
+CREATE TABLE #nt_nhap (id INT, loai TINYINT, ho_ten_don_vi NVARCHAR(300), an_danh BIT, an_dinh_danh BIT, ngay_sinh DATE,
                        ten_he NVARCHAR(200), ten_khoa NVARCHAR(200), nien_khoa NVARCHAR(50),
                        ten_lop NVARCHAR(100), so_tien DECIMAL(18,0), ngay_tai_tro DATE);
 INSERT #nt_nhap EXEC dbo.TT_CongKhai_GetNhaTaiTroTheoChuongTrinh @id_chuong_trinh = @ct_nhap;

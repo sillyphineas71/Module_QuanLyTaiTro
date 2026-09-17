@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import clsx from "clsx";
-import { CalendarIcon, LocationIcon } from "@primer/octicons-react";
+import { CalendarIcon, FileIcon, LocationIcon } from "@primer/octicons-react";
 import TrangCongKhai from "../../layout/TrangCongKhai";
 import AppResultState from "../../layout/AppResultState";
 import { TabsWithItems } from "../../components-ui/tab/Tabs";
@@ -41,9 +41,10 @@ import styles from "./TaiTroChiTietPage.module.css";
 //     ⚠️ Thẻ "Bạn tham gia tài trợ" VẪN LÀM ĐƯỢC VIỆC CỦA NÓ mà không cần nút: số tài khoản,
 //        ngân hàng và nội dung chuyển khoản là THẬT và đủ để chuyển tiền ngay hôm nay.
 //
-//  2. LINK "Xem tất cả minh chứng (N)" -> BỎ, thay bằng HIỆN HẾT thumbnail. Link đó cần một
-//     trang/hộp thoại thư viện ảnh chưa có ⇒ lại là vỏ. Mỗi khoản chi chỉ vài ảnh nên hiện hết
-//     vừa rẻ hơn vừa không hứa gì.
+//  2. ~~LINK "Xem tất cả minh chứng (N)" -> BỎ, thay bằng HIỆN HẾT thumbnail.~~ 🔄 ĐÃ ĐẢO
+//     (2026-09-17, lead: "thiết kế giống mẫu"): nay CÓ, như mẫu — dải 3 ảnh + nút đó. Nút làm việc
+//     thật mà không cần thư viện ảnh: mở hết dải ảnh tại chỗ. Lý do cũ ("link cần thư viện ảnh
+//     chưa có ⇒ vỏ") chỉ đúng nếu link dẫn sang trang khác.
 //
 //  3. HỘP THOẠI XEM ẢNH LỚN -> KHÔNG dựng. Thay bằng: mỗi thumbnail là một <a target="_blank">
 //     mở thẳng ảnh gốc. Trình duyệt lo phóng to/xoay/tải về, ta không phải dựng bẫy focus,
@@ -145,45 +146,71 @@ const VongTienDo: React.FC<{ phanTram: number; dangDienRa: boolean }> = ({ phanT
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // BẢNG NHÀ TÀI TRỢ
 // ═══════════════════════════════════════════════════════════════════════════════════════════
-// 🔴 KHÔNG CÓ CỘT "NGÀY SINH" — lead đã bỏ khỏi trang công khai (ghép họ tên + lớp đã định danh
-//    được một người, thêm ngày sinh là công bố dữ liệu cá nhân ra Internet). Đừng thêm lại "cho
-//    giống mẫu": mẫu là của một trường THPT và chính chỗ đó là thiếu sót của mẫu.
+// 🔄 CỘT "NGÀY SINH" — ĐÃ ĐẢO (2026-09-17). Trạng thái cũ: KHÔNG có cột này — lead bỏ ở T2 vì ghép
+//    họ tên + lớp + ngày sinh định danh được một người, và ghi "đừng thêm lại cho giống mẫu".
+//    Nay CÓ, theo quyết định của sếp (mẫu có cột này). Lập luận cũ không sai, bị vượt qua; giảm thiểu
+//    nằm ở SERVER: ngày sinh chỉ ra ngoài khi không ẩn danh (view 03). Ba lớp: CLAUDE.md mục 5.
 //
-// SÀN BẢNG = 40 STT + 300 + 155 + 195 + 115 + 70 + 145 + 125 = 1145px (xem .tableRegion trong CSS).
+// 🔴 6 CỘT: STT · Họ tên · Ngày sinh · Lớp · Số tiền · Thời gian (2026-09-17, lead duyệt "C2").
+//    RÀNG BUỘC: bố cục hàng 3 THEO MẪU SẾP (hai cột 61/39) — cột là thứ điều chỉnh, bố cục thì không.
+//    Khung cột trái đo thật 736–769px ⇒ bảng phải ≤ 736px.
+//    · ĐÃ BỎ "Khoa": cổng của CHÍNH Khoa Toán - Cơ - Tin học, cột luôn cùng một tên (N15).
+//    · ĐÃ BỎ "Hệ" + "Khoá": MÃ LỚP THẬT TỰ MANG CẢ HAI — "CQ56/11.01" = chính quy + khoá 56,
+//      "K66A1" = khoá 66. Hai cột kia lặp lại thông tin đã có trong một cột hẹp hơn.
+//    Dữ liệu `ten_khoa` · `ten_he` · `nien_khoa` VẪN lưu, vẫn trả qua API, vẫn trong hợp đồng — chỉ không hiện.
+//    ⚠️ Mẫu có đủ 9 cột (STT · Họ tên · Ngày sinh · Hệ · Khoa · Khoá · Lớp · Số tiền · Thời gian) vì giá
+//       trị THPT RẤT NGẮN ("12" · "Toán" · "1994" · "A2") — không phải vì mẫu ít cột (luật A9, docs/02).
+//       Muốn đủ cột như mẫu mà giữ bố cục ⇒ phải nâng trần trang 1440 — quyết định bố cục, nợ N18.
+//
+// SÀN BẢNG = 52 STT + 200 + 108 + 96 + 134 + 108 = 698px (xem .tableRegion trong CSS).
+//            Lịch sử: 830 → 1145 (nới cho hết "...", tính theo 16px) → 1270 (thêm Ngày sinh) → 1058
+//            (tính lại theo 13px, bỏ Khoa, bảng trọn bề rộng) → 698 (trả bố cục mẫu, bỏ Hệ + Khoá, Họ tên
+//            260 → 200). ⚠️ STT KHÔNG khai ở đây — xem .tableRegion col:first-child.
 // ⚠️ Đổi width cột nào cũng phải sửa CẢ HAI chỗ: `min-width` của .tableRegion và con số ở đây.
 //
-// 🔴 WIDTH CỦA BẢNG NÀY ĐƯỢC ĐẶT THEO NỘI DUNG, KHÔNG THEO CHỖ TRỐNG — lead chốt: thà bảng dài ra
-// và cuộn ngang còn hơn để "..." trên bảng công khai. Sàn 830 -> 1145px là hệ quả cố ý.
-// Cơ sở: bảng chạy ở font 16px (KHÔNG file nào đặt font-size cho body/BaseStyles), chữ số ~9,6px,
-// chữ thường có dấu ~8,3-8,6px, cộng padding ô 2x12px. Ngân sách cũ tính nhầm theo 14px nên
-// SÁU trong TÁM cột đều thiếu chỗ.
-//      cột           cần     cũ      mới
-//      Họ tên/Đơn vị ~304    180     300   (cột MỞ — xem ghi chú tại chỗ, vẫn có thể cắt)
-//      Hệ            ~149    100     155
-//      Khoa          ~187    140     195
-//      Khoá          ~106     95     115
-//      Lớp            ~64     70      70   (đã dư, giữ nguyên)
-//      Số tiền       ~128    105     145
-//      Thời gian     ~114    100     125
-// ⚠️ Chỉ "Lớp", "Khoá", "Thời gian" và "Số tiền" là ĐÓNG (định dạng cố định ⇒ width đủ vĩnh viễn).
-//    Ba cột còn lại là chữ tự do/nửa đóng: dữ liệu thật dài hơn mock thì lại cắt, và khi đó
-//    tooltip của renderOVanBan là thứ giữ dữ liệu, KHÔNG phải width.
+// 🔴 WIDTH TÍNH THEO FONT 13px — ĐO TRONG DOM THẬT, không theo 16px (luật A5, docs/02).
+//    `public/index.html` dòng 2 đặt `<html style="font-size: 13px">` ⇒ ô bảng 13px, padding mỗi bên
+//    0.75rem = 9,75px. Bộ số cũ (tính theo 16px, padding 12px) cấp thừa ~20% cho MỌI cột.
+//    Ngân sách mỗi cột chịu được GIÁ TRỊ DÀI NHẤT CÓ THỂ, không phải dài nhất trong mock. "Cần" dưới
+//    đây là bề rộng TỰ NHIÊN đo trên Edge (table-layout:auto) với đúng chuỗi ca xấu nhất đặt vào ô thật:
+//      cột           loại       ca xấu nhất đã đo              cần    width   cắt cụt + tooltip?
+//      STT           đóng       "999" + tiêu đề "STT"            47      52    không
+//      Họ tên/Đơn vị MỞ         (chữ tự do, không có trần)      258*    200    CÓ — chấp nhận (xem cột)
+//      Ngày sinh     đóng       "44/44/4444" (4 = số rộng nhất)  106     108    không
+//      Lớp           nửa đóng   "CQ56/11.01" (dạng lớp thật)      93      96    chỉ mã DÀI HƠN chuỗi này
+//      Số tiền       đóng       "9.999.999.999đ" (dưới 10 tỷ)    132     134    từ 10 tỷ — có `title` riêng
+//      Thời gian     đóng       "44/44/4444"                     105     108    không
+//      (* 258 = chuỗi dài nhất của mock "Tập thể lớp K39A - Khoá 1994-1998"; cột mở không có trần.)
+//      Đã bỏ (số đo giữ lại để thêm lại không phải đo): Hệ nửa đóng "Liên thông vừa làm vừa học" cần 195 ·
+//      Khoá đóng "4444-4444" cần 103.
+//    ⚠️ Ca xấu nhất lấy từ đâu: Lớp theo mã THẬT gặp trong repo cổng cựu SV (STU_Lop có "CQ56/11.01",
+//       "K66A1") — KHÔNG chạy SQL để lấy MAX(LEN). Khi có DB thật: đo lại với mã dài nhất rồi sửa bảng này.
+//    ⚠️ Mọi ô chữ đi qua renderOVanBan (có `title`) VÀ bảng có rule cắt cụt trong CSS module — HAI thứ
+//       đi CẶP. Bỏ rule thì chữ tràn chồng cột; bỏ renderOVanBan thì "..." mất đường đọc lại.
 //
 // 🔴 HAI GLYPH KHÁC NHAU CHO HAI Ý NGHĨA KHÁC NHAU — chỗ dễ làm sai nhất của bảng này:
 //      "—"                  = hệ thống KHÔNG CÓ dữ liệu này (doanh nghiệp không có khoá/lớp)
 //      "Nhà tài trợ ẩn danh"= người tài trợ CHỦ ĐỘNG giấu tên
 //    Dùng "—" cho cả hai thì người đọc không phân biệt được "không có" với "cố tình giấu", mà
 //    đó là hai câu trả lời rất khác nhau trên một bảng công khai.
+// Khối "Chi phí đã chi" khi thu gọn — đúng số mẫu sếp vẽ: bảng 3 dòng, dải 3 ảnh ("Xem tất cả minh
+// chứng (5)"). Nhiều hơn thì có nút mở hết (xem chú thích tại hai nút).
+const SO_DONG_CHI_THU_GON = 3;
+const SO_ANH_THU_GON = 3;
+
 const oHoacGach = (giaTri: string | null) => renderOVanBan(giaTri && giaTri.trim() ? giaTri : "—");
 
 const cotNhaTaiTro = (): IColumn[] => [
     {
-        // 🔴 CỘT MỞ — width KHÔNG BAO GIỜ "đủ" được, khác hẳn sáu cột kia. Họ tên và tên đơn vị là
-        // chữ tự do: 300px vừa đúng chuỗi dài nhất đang có ("Tập thể lớp K39A - Khoá 1994-1998",
-        // ~304px kể cả padding), nhưng một tên doanh nghiệp dài hơn là lại cắt.
+        // 🔴 CỘT MỞ — width KHÔNG BAO GIỜ "đủ" được, khác hẳn các cột kia. Họ tên và tên đơn vị là
+        // chữ tự do không có trần. 200px (sàn) đủ cho họ tên người thường; tên doanh nghiệp / tập thể dài
+        // thì CẮT — chuỗi dài nhất mock "Tập thể lớp K39A - Khoá 1994-1998" (258px) bị cắt.
         // ⇒ Ở ĐÂY ellipsis là trạng thái CHẤP NHẬN, không phải lỗi — và đó là lý do ô này bọc
-        //   renderOVanBan (có `title`) ngay từ đầu. Đừng đuổi theo bằng cách nới mãi.
-        dataField: "ho_ten_don_vi", caption: "Họ tên / Đơn vị", width: 300, isMainColumn: true,
+        //   renderOVanBan (có `title`) ngay từ đầu. Đừng đuổi theo bằng cách nới mãi: nới cột này là
+        //   bảng vượt khung cột trái 736px và cuộn ngang lại.
+        // ⚠️ Khung > sàn thì mọi cột GIÃN THEO TỈ LỆ, nên cột này thực tế được hơn 200px — số đo và phần
+        //    chữ còn thấy được khi bị cắt: khối .hang3 trong CSS.
+        dataField: "ho_ten_don_vi", caption: "Họ tên / Đơn vị", width: 200, isMainColumn: true,
         // Sắp xếp theo CHỮ ĐANG HIỆN, không theo giá trị thô: `ho_ten_don_vi` của dòng ẩn danh là
         // null, mà null sắp xếp thì trôi về một đầu bảng và lộ ra đúng nhóm vừa xin được giấu.
         filterValue: (n: INhaTaiTro) => (n.an_danh ? "Nhà tài trợ ẩn danh" : n.ho_ten_don_vi ?? ""),
@@ -191,16 +218,26 @@ const cotNhaTaiTro = (): IColumn[] => [
             ? <span className={styles.anDanh}>Nhà tài trợ ẩn danh</span>
             : oHoacGach(n.ho_ten_don_vi)),
     },
-    // Hệ / Khoa: NỬA ĐÓNG — lấy từ danh mục đào tạo nên không dài tuỳ ý như họ tên, nhưng danh
-    // mục thật sẽ có tên dài hơn mock ("Khoa Kinh tế - Quản trị kinh doanh"). Width dưới đây đủ
-    // cho mọi giá trị ĐANG CÓ; gặp tên dài hơn thì vẫn cắt và vẫn còn tooltip.
-    { dataField: "ten_he", caption: "Hệ", width: 155, cellRender: (n: INhaTaiTro) => oHoacGach(n.ten_he) },
-    { dataField: "ten_khoa", caption: "Khoa", width: 195, cellRender: (n: INhaTaiTro) => oHoacGach(n.ten_khoa) },
-    // Khoá: ĐÓNG — luôn là "yyyy-yyyy" (9 ký tự). 95px thiếu đúng ~11px nên cắt mất chữ số cuối,
-    // kiểu lỗi khó thấy nhất: "1994-199…" vẫn đọc ra như một khoá có thật.
-    { dataField: "nien_khoa", caption: "Khoá", width: 115, cellRender: (n: INhaTaiTro) => oHoacGach(n.nien_khoa) },
-    // Lớp: 70px đã dư cho "K39A" (~64px) — cột DUY NHẤT không phải đụng tới.
-    { dataField: "ten_lop", caption: "Lớp", width: 70, cellRender: (n: INhaTaiTro) => oHoacGach(n.ten_lop) },
+    // Ngày sinh: ĐÓNG — "dd/MM/yyyy" y hệt cột Thời gian (dinhDangNgay padStart, 10 ký tự) ⇒ cùng
+    // 108px. Ca xấu nhất "44/44/4444" đo 106px ở 13px; tiêu đề "Ngày sinh" lọt.
+    // 🔴 `null` CÓ HAI NGHĨA — xem INhaTaiTro.ngay_sinh:
+    //      an_danh  ⇒ "Ẩn" (nghiêng, mờ — cùng kiểu "Nhà tài trợ ẩn danh"): server ĐÃ CHE
+    //      còn lại  ⇒ "—": doanh nghiệp / tập thể KHÔNG CÓ ngày sinh
+    //    Vẽ "—" cho người ẩn danh là nói "không có dữ liệu" với một người CỐ TÌNH GIẤU — trái A7.
+    // ⚠️ Che là việc của SERVER (view công khai), không phải của cột này: nhánh `an_danh` ở đây chỉ
+    //    chọn CHỮ để hiện cho ô rỗng, nó không giấu được gì — dữ liệu đã không rời máy chủ.
+    {
+        dataField: "ngay_sinh", caption: "Ngày sinh", width: 108,
+        cellRender: (n: INhaTaiTro) => (n.an_danh
+            ? <span className={styles.anDanh}>Ẩn</span>
+            : oHoacGach(n.ngay_sinh ? dinhDangNgay(n.ngay_sinh).day : null)),
+    },
+    // (Ba cột "Hệ" · "Khoa" · "Khoá" từng đứng ngay đây — đã bỏ, xem khối đầu bảng. Nếu thêm lại "Khoá":
+    //  cột ĐÓNG "yyyy-yyyy", thiếu vài px là cắt mất chữ số cuối — "1994-199…" vẫn đọc ra như một khoá
+    //  có thật — nên width phải đủ cho "4444-4444" (đo 103px), đừng để cắt cụt.)
+    // Lớp: NỬA ĐÓNG. 🔄 Từng là 70px "đã dư cho K39A" — nhưng "K39A" là dạng của MOCK. Lớp THẬT trong
+    // STU_Lop có dạng "CQ56/11.01" (đo 93px) — 70px sẽ cắt mọi lớp thật. 96px; mã dài hơn thì cắt + tooltip.
+    { dataField: "ten_lop", caption: "Lớp", width: 96, cellRender: (n: INhaTaiTro) => oHoacGach(n.ten_lop) },
     // ═══════════════════════════════════════════════════════════════════════════════════════
     // 🔴 CỘT TIỀN: `align: "left"` — CANH THEO CHỮ SỐ ĐẦU, lead chốt. ĐỪNG "sửa lại cho đúng
     //    quy ước" nếu không hỏi lại.
@@ -219,29 +256,27 @@ const cotNhaTaiTro = (): IColumn[] => [
     //    column.align`, bỏ trống thì <th> rơi về mặc định của trình duyệt là CENTER, còn <td> là
     //    left ⇒ tiêu đề lệch khỏi cột số.
     //
-    // WIDTH 105 -> 145: 105px KHÔNG ĐỦ và đó là lỗi "..." đã báo.
-    //   "250.000.000đ" @16px (không có font-size nào đặt body/BaseStyles ⇒ mặc định 16px, KHÔNG
-    //   phải 14px) ≈ 9 chữ số x9,5 + 2 dấu chấm x4,5 + "đ" 9,3 ≈ 104px, cộng padding ô 2x12
-    //   = ~128px. Ô tiền lại KHÔNG bọc renderOVanBan như các cột chữ ⇒ bị cắt là MẤT HẲN con số
-    //   trên một bảng công khai về tiền quyên góp. 145px phủ tới "1.000.000.000đ" (~142px).
-    // ⚠️ Vì sao "..." chỉ thấy ở màn RỘNG: dưới 1400px hàng 3 xếp dọc, bảng nhận trọn ~1318px nên
-    //    mọi cột giãn theo tỉ lệ và không cột nào bị cắt. Từ 1400px trở lên bảng nằm trong cột
-    //    61% (839-868px) ≈ đúng sàn bảng ⇒ cột nhận gần đúng width thô và mới lộ ra.
+    // WIDTH: 105 → 145 → 134. Ô tiền KHÔNG bọc renderOVanBan như các cột chữ ⇒ bị cắt là MẤT HẲN con
+    //   số trên một bảng công khai về tiền quyên góp, nên cột này phải đủ cho mọi số thực tế.
+    //   🔄 Lần nới 105 → 145 tính theo 16px ("250.000.000đ ≈ 128px") — SAI font. Đo thật ở 13px, đậm
+    //   600, tabular-nums: "9.999.999.999đ" (sát 10 tỷ) = 132px ⇒ 134. Từ 10 tỷ trở lên mới cắt,
+    //   và khi đó còn `title` bên dưới.
+    // ⚠️ Bảng nằm trong cột trái 61% của hàng 3 (bố cục mẫu) — số đo cuộn ngang ở khối .hang3 CSS.
     {
-        dataField: "so_tien", caption: "Số tiền", width: 145, align: "left",
-        // `title` là lưới an toàn, KHÔNG phải thứ thay cho width đủ rộng: 145px đã đủ cho mọi giá
-        // trị thực tế, nhưng cột này là cột DUY NHẤT của bảng không đi qua renderOVanBan nên nếu
-        // mai có ai hạ width xuống thì vẫn còn đường đọc ra con số.
+        dataField: "so_tien", caption: "Số tiền", width: 134, align: "left",
+        // `title` là lưới an toàn, KHÔNG phải thứ thay cho width đủ rộng: 134px đủ cho mọi số dưới
+        // 10 tỷ, nhưng cột này là cột DUY NHẤT của bảng không đi qua renderOVanBan nên nếu mai có
+        // ai hạ width xuống (hoặc có khoản từ 10 tỷ) thì vẫn còn đường đọc ra con số.
         cellRender: (n: INhaTaiTro) => {
             const chu = dinhDangTien(n.so_tien);
             return <span className={styles.oTien} title={chu}>{chu}</span>;
         },
     },
     // Thời gian: ĐÓNG — `dinhDangNgay().day` luôn ra "dd/MM/yyyy" (10 ký tự, padStart nên không
-    // có bản ngắn hơn). 8 chữ số x9,6 + 2 dấu "/" x6,7 ≈ 90px + padding 24 = ~114px > 100px cũ
-    // ⇒ ngày nào cũng cụt đuôi. 125px cho biên 11px.
+    // có bản ngắn hơn). 🔄 Phép tính cũ "8 chữ số x9,6 + padding 24 = ~114px" là theo 16px — sai font.
+    // Đo thật ở 13px: ca xấu nhất "44/44/4444" = 105px ⇒ 108 (cùng Ngày sinh).
     {
-        dataField: "ngay_tai_tro", caption: "Thời gian", width: 125,
+        dataField: "ngay_tai_tro", caption: "Thời gian", width: 108,
         cellRender: (n: INhaTaiTro) => renderOVanBan(dinhDangNgay(n.ngay_tai_tro).day),
     },
 ];
@@ -250,6 +285,9 @@ const TaiTroChiTietPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [ct, setCt] = useState<IChuongTrinhTaiTro | null>(null);
     const [trangThai, setTrangThai] = useState<TrangThaiTai>("dang-tai");
+    // Khối chi phí: bảng mở hết hay thu gọn về SO_DONG_CHI_THU_GON dòng; dải ảnh mở hết hay SO_ANH_THU_GON ảnh.
+    const [moRongChi, setMoRongChi] = useState(false);
+    const [moRongAnh, setMoRongAnh] = useState(false);
 
     useAppDocumentTitle(ct ? ct.ten : "Chương trình tài trợ");
 
@@ -299,6 +337,13 @@ const TaiTroChiTietPage: React.FC = () => {
     }
 
     const dangDienRa = ct.trang_thai === eTrangThaiChuongTrinh.DangDienRa;
+
+    // ── Khối "Chi phí đã chi": thu gọn như mẫu (3 dòng bảng, 3 ảnh) ──
+    const tatCaAnh = ct.khoan_chi.flatMap((kc) => kc.minh_chung.map((mc) => ({ mc, kc })));
+    const coDongAn = ct.khoan_chi.length > SO_DONG_CHI_THU_GON;
+    const coAnhAn = tatCaAnh.length > SO_ANH_THU_GON;
+    // "Mở hết" = không còn phần nào bị giấu; nút "Xem chi tiết" đổi nhãn theo đây.
+    const daMoHet = (!coDongAn || moRongChi) && (!coAnhAn || moRongAnh);
 
     // ── Bảng nhà tài trợ, dùng chung cho cả 4 tab ──
     const renderBangNhaTaiTro = (ds: INhaTaiTro[], nhanLoai: string) => {
@@ -437,45 +482,122 @@ const TaiTroChiTietPage: React.FC = () => {
                     </section>
 
                     <div className={styles.cotPhai}>
+                        {/* ═══ CHI PHÍ ĐÃ CHI — dựng THEO MẪU SẾP (2026-09-17) ═══
+                            Mẫu: icon tròn "$" + tiêu đề + nhãn trạng thái · số lớn, dưới là "(trên tổng dự kiến …)",
+                            bên phải nút viền "Xem chi tiết" · BẢNG 4 cột Nội dung chi | Số tiền | Ngày chi | Minh chứng
+                            · dải 3 ảnh + "Xem tất cả minh chứng (N)". 🔴 Lead: "thiết kế giống mẫu, đừng tự ý". */}
                         <section className={styles.khoiChiPhi} aria-labelledby="tieu-de-chi-phi">
                             <div className={styles.dauKhoi}>
-                                <h2 id="tieu-de-chi-phi">Chi phí đã chi</h2>
-                                <span className={clsx(styles.huyHieu, dangDienRa ? styles.huyHieuDang : styles.huyHieuDa)}>
+                                <div className={styles.tieuDeCoIcon}>
+                                    <span className={styles.iconTron} aria-hidden="true">$</span>
+                                    <h2 id="tieu-de-chi-phi">Chi phí đã chi cho chương trình</h2>
+                                </div>
+                                {/* Chữ nhãn theo TRẠNG THÁI THẬT của chương trình, không chép cứng "Đã diễn ra"
+                                    của mẫu — lead đã xác nhận nhãn đó là mẫu vẽ nhầm (nợ N10). */}
+                                <span className={clsx(styles.huyHieuNhe, dangDienRa ? styles.huyHieuNheDang : styles.huyHieuNheDa)}>
                                     {dangDienRa ? "Đang diễn ra" : "Đã diễn ra"}
                                 </span>
                             </div>
                             {ct.khoan_chi.length === 0 ? (
                                 <p className={styles.tabRong}>Chương trình chưa chi khoản nào.</p>
                             ) : (<>
-                                <p className={styles.chiPhiSo}>
-                                    <b>{dinhDangTien(soLieu.daChi)}</b>
-                                    <span>trên tổng dự kiến {dinhDangTien(soLieu.mucTieu)}</span>
-                                </p>
-                                {ct.khoan_chi.map((kc: IKhoanChi) => (
-                                    <div key={kc.id} className={styles.khoanChi}>
-                                        <div className={styles.khoanChiDau}>
-                                            <span className={styles.khoanChiNoiDung}>{kc.noi_dung}</span>
-                                            <b className={styles.khoanChiTien}>{dinhDangTien(kc.so_tien)}</b>
-                                            <span className={styles.khoanChiNgay}>{dinhDangNgay(kc.ngay_chi).day}</span>
-                                        </div>
-                                        {kc.minh_chung.length > 0 && (
-                                            // 🔴 HIỆN HẾT thumbnail, KHÔNG có link "Xem tất cả (N)" - link đó cần một
-                                            // thư viện ảnh chưa có. Mỗi thumbnail mở ảnh GỐC ở tab mới: trình duyệt
-                                            // lo phóng to/tải về, ta không dựng hộp thoại xem ảnh nào.
-                                            <ul className={styles.minhChung}>
-                                                {kc.minh_chung.map((mc) => (
-                                                    <li key={mc.id}>
-                                                        <a href={duongDanAnh(mc.ten_file)} target="_blank" rel="noreferrer"
-                                                            title={`Mở ảnh minh chứng: ${kc.noi_dung}`}>
-                                                            <AnhCoDuPhong tenFile={mc.ten_file}
-                                                                lop={styles.minhChungAnh} lopTrong={styles.minhChungTrong} />
-                                                        </a>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                ))}
+                                <div className={styles.chiPhiTong}>
+                                    {/* Như mẫu: số lớn ở trên, "(trên tổng dự kiến …)" xuống dòng ngay dưới. */}
+                                    <p className={styles.chiPhiSo}>
+                                        <b>{dinhDangTien(soLieu.daChi)}</b>
+                                        <span>(trên tổng dự kiến {dinhDangTien(soLieu.mucTieu)})</span>
+                                    </p>
+                                    {/* 🔴 "Xem chi tiết" = MỞ HẾT cả khối: mọi dòng bảng + mọi ảnh minh chứng.
+                                        Chưa có trang chi tiết khoản chi nào ⇒ đó là việc thật duy nhất nút làm được.
+                                        Không còn gì bị giấu (≤ SO_DONG_CHI_THU_GON dòng VÀ ≤ SO_ANH_THU_GON ảnh) thì
+                                        KHÔNG hiện nút — bấm vào không đổi gì là nút chết (luật B1).
+                                        Có trang chi tiết thật thì đổi nút thành liên kết tới đó. */}
+                                    {(coDongAn || coAnhAn) && (
+                                        <button type="button" className={styles.nutVien}
+                                            aria-expanded={daMoHet} aria-controls="bang-khoan-chi dai-minh-chung"
+                                            onClick={() => { setMoRongChi(!daMoHet); setMoRongAnh(!daMoHet); }}>
+                                            {daMoHet ? "Thu gọn" : "Xem chi tiết"}
+                                        </button>
+                                    )}
+                                </div>
+                                <div className={styles.bangChiKhung}>
+                                    <table id="bang-khoan-chi" className={styles.bangChi}>
+                                        <colgroup>
+                                            <col />
+                                            <col className={styles.cotChiTien} />
+                                            <col className={styles.cotChiNgay} />
+                                            <col className={styles.cotChiMinhChung} />
+                                        </colgroup>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Nội dung chi</th>
+                                                <th scope="col">Số tiền</th>
+                                                <th scope="col">Ngày chi</th>
+                                                <th scope="col" className={styles.oGiua}>Minh chứng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(moRongChi ? ct.khoan_chi : ct.khoan_chi.slice(0, SO_DONG_CHI_THU_GON))
+                                                .map((kc: IKhoanChi) => {
+                                                    const dau = kc.minh_chung[0];
+                                                    const soAnh = kc.minh_chung.length;
+                                                    return (
+                                                        <tr key={kc.id}>
+                                                            {/* Cắt cụt + `title` đi CẶP: cột phải 39% hẹp, nội dung chi dài
+                                                                sẽ bị cắt — title là đường đọc lại đủ chữ. */}
+                                                            <td title={kc.noi_dung}>{kc.noi_dung}</td>
+                                                            <td className={styles.oTienChi} title={dinhDangTien(kc.so_tien)}>
+                                                                {dinhDangTien(kc.so_tien)}
+                                                            </td>
+                                                            <td>{dinhDangNgay(kc.ngay_chi).day}</td>
+                                                            <td className={styles.oGiua}>
+                                                                {dau ? (
+                                                                    // Mở ảnh minh chứng ĐẦU TIÊN ở tab mới — cùng cách thumbnail
+                                                                    // bên dưới. Nhiều ảnh thì `title` nói rõ còn ảnh ở dải dưới.
+                                                                    <a className={styles.nutMinhChung} href={duongDanAnh(dau.ten_file)}
+                                                                        target="_blank" rel="noreferrer"
+                                                                        title={soAnh > 1
+                                                                            ? `Mở minh chứng 1/${soAnh}: ${kc.noi_dung} — các ảnh còn lại ở phần minh chứng bên dưới`
+                                                                            : `Mở minh chứng: ${kc.noi_dung}`}
+                                                                        aria-label={`Mở minh chứng: ${kc.noi_dung}`}>
+                                                                        <FileIcon size={16} />
+                                                                    </a>
+                                                                ) : (
+                                                                    // "—" = KHÔNG CÓ dữ liệu (luật A7): khoản chi chưa có ảnh nào.
+                                                                    <span className={styles.oTrong} title="Chưa có minh chứng">—</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {tatCaAnh.length > 0 && (<div className={styles.minhChungKhoi}>
+                                    {/* Như mẫu: dải SO_ANH_THU_GON ảnh + "Xem tất cả minh chứng (N)".
+                                        🔄 Trước đây (đã thay theo yêu cầu lead): hiện HẾT ảnh, bỏ link vì "cần thư viện
+                                        ảnh chưa có". Nay link làm việc thật mà KHÔNG cần thư viện: mở hết dải ảnh tại chỗ.
+                                        Mỗi thumbnail vẫn mở ảnh GỐC ở tab mới — không dựng hộp thoại xem ảnh. */}
+                                    <ul id="dai-minh-chung" className={styles.minhChung}>
+                                        {(moRongAnh ? tatCaAnh : tatCaAnh.slice(0, SO_ANH_THU_GON)).map(({ mc, kc }) => (
+                                            <li key={mc.id}>
+                                                <a href={duongDanAnh(mc.ten_file)} target="_blank" rel="noreferrer"
+                                                    title={`Mở ảnh minh chứng: ${kc.noi_dung}`}>
+                                                    <AnhCoDuPhong tenFile={mc.ten_file}
+                                                        lop={styles.minhChungAnh} lopTrong={styles.minhChungTrong} />
+                                                </a>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {/* Chỉ hiện khi CÓ ảnh bị giấu (luật B1). */}
+                                    {coAnhAn && (
+                                        <button type="button" className={styles.nutXemTatCa}
+                                            aria-expanded={moRongAnh} aria-controls="dai-minh-chung"
+                                            onClick={() => setMoRongAnh((v) => !v)}>
+                                            {moRongAnh ? "Thu gọn minh chứng" : `Xem tất cả minh chứng (${tatCaAnh.length})`}
+                                        </button>
+                                    )}
+                                </div>)}
                             </>)}
                         </section>
 
